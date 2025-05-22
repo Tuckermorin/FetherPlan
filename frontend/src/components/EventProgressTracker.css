@@ -3,13 +3,14 @@
 .progress-tracker {
   width: 280px;
   padding: 1.5rem;
+  padding-top: 2rem; /* Add extra padding at top */
   background: white;
   border-right: 2px solid #e5e7eb;
-  height: 100vh;
+  height: calc(100vh - 100px);
   overflow-y: auto;
   position: fixed;
   left: 0;
-  top: 0;
+  top: 100px; /* Account for header height */
   z-index: 10;
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
 }

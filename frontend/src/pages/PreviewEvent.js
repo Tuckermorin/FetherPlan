@@ -9,18 +9,18 @@ import {
   Button,
   Box,
   Divider,
-  Chip
+  // Chip
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import PlaceIcon from '@mui/icons-material/Place';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+// import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import GroupIcon from '@mui/icons-material/Group';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 
 const PreviewEvent = ({ eventData, dateMode, dateTimeSuggestions, activities, onEdit, onConfirm }) => {
   // Create a default empty itinerary array if not provided
-  const itinerary = eventData.itinerary || [];
+  // const itinerary = eventData.itinerary || [];
 
   return (
     <Container maxWidth="md" style={{ marginTop: '2rem' }}>
