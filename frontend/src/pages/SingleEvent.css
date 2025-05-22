@@ -1,0 +1,228 @@
+/* SingleEvent.css */
+
+.single-event-container {
+  padding: 2rem 0;
+}
+
+.single-event-header {
+  margin-bottom: 2rem;
+}
+
+.single-event-title {
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+}
+
+.single-event-subtitle {
+  margin-bottom: 2rem !important;
+}
+
+.single-event-paper {
+  padding: 2rem !important;
+  border-radius: 1.5rem !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.event-details-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-weight: 600 !important;
+  color: #374151 !important;
+}
+
+.section-divider {
+  margin: 2rem 0 !important;
+}
+
+/* Activity Section */
+.activities-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.add-activity-btn {
+  border-radius: 0.5rem !important;
+  border-color: #6366f1 !important;
+  color: #6366f1 !important;
+}
+
+.add-activity-btn:hover {
+  border-color: #4f46e5 !important;
+  background-color: rgba(99, 102, 241, 0.04) !important;
+}
+
+/* Activity Cards */
+.activity-card {
+  border-radius: 1.5rem !important;
+  border: 2px solid #e5e7eb !important;
+  background-color: #fafafb !important;
+  box-shadow: none !important;
+  margin-bottom: 1.5rem;
+}
+
+.activity-card:last-child {
+  margin-bottom: 0;
+}
+
+.activity-card-content {
+  padding: 2rem !important;
+}
+
+.activity-option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.activity-option-title {
+  font-weight: 600 !important;
+  color: #374151 !important;
+}
+
+.delete-activity-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Form Fields */
+.form-input .MuiOutlinedInput-root {
+  border-radius: 0.5rem !important;
+}
+
+.form-input-with-icon .MuiInputAdornment-root .MuiSvgIcon-root {
+  color: #6366f1 !important;
+  margin-right: 0.5rem;
+}
+
+/* Date Selection */
+.date-selection-section {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.date-selection-title {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin-bottom: 1rem !important;
+}
+
+.date-selection-title .MuiSvgIcon-root {
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  color: #6366f1 !important;
+}
+
+.date-mode-toggle .MuiToggleButton-root {
+  border-radius: 0.5rem !important;
+  padding: 0.75rem 1.5rem !important;
+}
+
+.date-mode-toggle .MuiToggleButton-root.Mui-selected {
+  background-color: #6366f1 !important;
+  color: white !important;
+}
+
+.date-mode-toggle .MuiToggleButton-root.Mui-selected:hover {
+  background-color: #4f46e5 !important;
+}
+
+/* Date Suggestions */
+.suggestion-card {
+  margin-bottom: 1rem !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.suggestion-card .MuiOutlinedInput-root {
+  border-radius: 0.5rem !important;
+}
+
+.suggestion-delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+.add-suggestion-btn {
+  border-radius: 0.5rem !important;
+  border-color: #6366f1 !important;
+  color: #6366f1 !important;
+  margin-top: 1rem;
+}
+
+.add-suggestion-btn:hover {
+  border-color: #4f46e5 !important;
+  background-color: rgba(99, 102, 241, 0.04) !important;
+}
+
+/* Activity Options */
+.activity-options-divider {
+  margin: 1rem 0 !important;
+}
+
+.activity-options-title {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin-bottom: 1rem !important;
+}
+
+.activity-switch .MuiSwitch-switchBase.Mui-checked {
+  color: #6366f1 !important;
+}
+
+.activity-switch .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track {
+  background-color: #6366f1 !important;
+}
+
+/* Cost Section */
+.cost-section-title {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin-bottom: 1rem !important;
+}
+
+.cost-mode-toggle .MuiToggleButton-root {
+  border-radius: 0.5rem !important;
+  padding: 0.5rem 1.5rem !important;
+}
+
+.cost-mode-toggle .MuiToggleButton-root.Mui-selected {
+  background-color: #6366f1 !important;
+  color: white !important;
+}
+
+.cost-mode-toggle .MuiToggleButton-root.Mui-selected:hover {
+  background-color: #4f46e5 !important;
+}
+
+/* Preview Button */
+.preview-button-container {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.preview-button {
+  padding: 1rem 3rem !important;
+  font-size: 1.1rem !important;
+  border-radius: 0.5rem !important;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.preview-button:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Helper Text */
+.voting-helper-text {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.voting-helper-text .MuiTypography-root {
+  margin-bottom: 1rem !important;
+}

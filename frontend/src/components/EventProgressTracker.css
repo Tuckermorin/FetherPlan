@@ -1,0 +1,171 @@
+/* EventProgressTracker.css */
+
+.progress-tracker {
+  width: 280px;
+  padding: 1.5rem;
+  background: white;
+  border-right: 2px solid #e5e7eb;
+  height: 100vh;
+  overflow-y: auto;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.progress-title {
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  margin-bottom: 2rem !important;
+  text-align: center;
+}
+
+.progress-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.progress-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  min-height: 120px;
+  position: relative;
+}
+
+.progress-step.final {
+  min-height: 80px;
+}
+
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.step-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.step-icon.complete {
+  color: #10b981 !important;
+  background: white;
+}
+
+.step-icon.active {
+  color: #6366f1 !important;
+  background: white;
+}
+
+.step-icon.inactive {
+  color: #d1d5db !important;
+  background: white;
+}
+
+.step-line {
+  width: 2px;
+  height: 88px;
+  background: #e5e7eb;
+  margin-top: 8px;
+}
+
+.step-line.complete {
+  background: #10b981;
+}
+
+.step-content {
+  flex: 1;
+  padding-top: 4px;
+}
+
+.step-title {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.step-description {
+  color: #6b7280 !important;
+  margin-bottom: 0.75rem !important;
+  line-height: 1.4 !important;
+}
+
+.step-status {
+  margin-top: 0.5rem;
+}
+
+.status-chip {
+  font-weight: 500 !important;
+}
+
+.status-chip.complete {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.status-chip.complete .MuiChip-icon {
+  color: #10b981 !important;
+}
+
+.status-chip.ready {
+  background-color: #e0e7ff !important;
+  color: #3730a3 !important;
+}
+
+.status-chip.ready .MuiChip-icon {
+  color: #6366f1 !important;
+}
+
+.progress-summary {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.progress-summary .MuiTypography-root {
+  text-align: center;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .progress-tracker {
+    width: 240px;
+    padding: 1rem;
+  }
+  
+  .step-title {
+    font-size: 0.9rem !important;
+  }
+  
+  .step-description {
+    font-size: 0.8rem !important;
+  }
+}
+
+/* Animation for step completion */
+.step-icon.complete {
+  animation: checkmark 0.3s ease-in-out;
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
