@@ -6,10 +6,14 @@ import './EventProgressTracker.css';
 const EventProgressTracker = ({ activities = [] }) => {
   const first = activities[0] || {};
   const step1Complete =
+
     first.name && first.description &&
     ((first.dateMode === 'single' && first.date && first.time) ||
       (first.dateMode === 'range' && first.startDate && first.endDate) ||
       (first.dateMode === 'suggestions' && first.dateTimeSuggestions && first.dateTimeSuggestions.length));
+
+    first.name && first.location && first.description && first.date && first.time;
+
 
   const status = {
     step1: { complete: !!step1Complete, active: !step1Complete },

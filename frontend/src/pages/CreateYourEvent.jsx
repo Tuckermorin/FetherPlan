@@ -16,7 +16,9 @@ import {
   ToggleButton,
   Divider
 } from '@mui/material';
+
 import { DeleteOutline, EventNote, Schedule, AddCircle } from '@mui/icons-material';
+import { DeleteOutline, EventNote, Schedule, LocationOn, AddCircle } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import PreviewEvent from './PreviewEvent';
 import './CreateYourEvent.css';
@@ -34,6 +36,7 @@ export default function CreateYourEvent() {
     {
       name: '',
       description: '',
+      location: '',
       link: '',
       dateMode: 'single',
       date: '',
@@ -54,6 +57,7 @@ export default function CreateYourEvent() {
   ]);
 
   const [showPreview, setShowPreview] = useState(false);
+
   const [supports, setSupports] = useState([]);
   const [choiceCount, setChoiceCount] = useState('');
 
@@ -83,6 +87,7 @@ export default function CreateYourEvent() {
     setActivities(updated);
   };
 
+
   const handleSupportChange = (index, field, value) => {
     const updated = [...supports];
     updated[index][field] = value;
@@ -99,6 +104,7 @@ export default function CreateYourEvent() {
   const removeSupport = (index) => {
     setSupports(prev => prev.filter((_, i) => i !== index));
   };
+
 
   const addSuggestion = (activityIndex) => {
     const updated = [...activities];
@@ -119,6 +125,7 @@ export default function CreateYourEvent() {
       {
         name: '',
         description: '',
+        location: '',
         link: '',
         dateMode: firstActivity.dateMode,
         date: firstActivity.date,
@@ -161,6 +168,9 @@ export default function CreateYourEvent() {
       ...eventData,
       name: firstActivity.name, // Use activity name as event name
       description: firstActivity.description, // Use activity description as event description
+
+      location: eventData.location || firstActivity.location,
+
       date: firstActivity.dateMode === 'single' ? firstActivity.date : '',
       time: firstActivity.dateMode === 'single' ? firstActivity.time : '',
       startDate: firstActivity.dateMode === 'range' ? firstActivity.startDate : '',
@@ -174,6 +184,7 @@ export default function CreateYourEvent() {
       activities: activities,
       supports: supports,
       choiceCount: choiceCount
+      activities: activities
     };
 
     try {
@@ -196,6 +207,7 @@ export default function CreateYourEvent() {
       ...eventData,
       name: firstActivity.name, // Use activity name as event name
       description: firstActivity.description, // Use activity description as event description
+      location: eventData.location || firstActivity.location,
       date: firstActivity.dateMode === 'single' ? firstActivity.date : '',
       time: firstActivity.dateMode === 'single' ? firstActivity.time : '',
       startDate: firstActivity.dateMode === 'range' ? firstActivity.startDate : '',
@@ -224,6 +236,7 @@ export default function CreateYourEvent() {
         </Typography>
         <Typography variant="body1" color="text.secondary" className="single-event-subtitle">
           Plan meaningful adventures and create lasting memories.
+          Perfect for one-time activities like dinners, meetings, or social gatherings.
         </Typography>
       </div>
 
@@ -239,6 +252,11 @@ export default function CreateYourEvent() {
             <Box className="activities-header">
               <Typography variant="subtitle1" className="section-title">
                 Activities
+          {/* Activity Section */}
+          <Box>
+            <Box className="activities-header">
+              <Typography variant="h6" className="section-title">
+                Activity {activities.length > 1 ? 'Options' : 'Information'}
               </Typography>
               {hasVotingEnabled && (
                 <Button
@@ -287,6 +305,19 @@ export default function CreateYourEvent() {
                         className="form-input form-input-with-icon"
                       />
                     </Grid>
+
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Location"
+                        value={activity.location}
+                        onChange={e => handleActivityChange(activityIndex, 'location', e.target.value)}
+                        InputProps={{
+                          startAdornment: <LocationOn />
+                        }}
+                        className="form-input form-input-with-icon"
+                      />
+                    </Grid>
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
@@ -299,6 +330,16 @@ export default function CreateYourEvent() {
                       />
                     </Grid>
 
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Link (optional)"
+                        value={activity.link}
+                        onChange={e => handleActivityChange(activityIndex, 'link', e.target.value)}
+                        className="form-input"
+                      />
+                    </Grid>
+
                     {/* Date Selection Mode */}
                     {(activityIndex === 0 || activity.dateMode !== activities[0].dateMode) && (
                       <Grid item xs={12}>
@@ -307,15 +348,26 @@ export default function CreateYourEvent() {
                             <Schedule />
                             Date & Time Selection
                           </Typography>
+
                           <ToggleButtonGroup
                             value={activity.dateMode}
                             exclusive
                             onChange={(event, mode) => handleDateModeChange(activityIndex, event, mode)}
+                          <ToggleButtonGroup 
+                            value={activity.dateMode} 
+                            exclusive 
+                            onChange={(event, mode) => handleDateModeChange(activityIndex, event, mode)} 
+
                             size="small"
                             className="date-mode-toggle"
                           >
                             <ToggleButton value="single">Single Time</ToggleButton>
+
                             <ToggleButton value="range">Date Range</ToggleButton>
+
+                            {/* Don't need a range unless we're opening it up for suggestions */}
+                            {/* <ToggleButton value="range">Date Range</ToggleButton> */}
+
                             <ToggleButton value="suggestions">Let People Choose</ToggleButton>
                           </ToggleButtonGroup>
                         </Box>
@@ -674,6 +726,7 @@ export default function CreateYourEvent() {
                 </Card>
               ))}
             </Box>
+
           </Box>
 
           {/* Preview Button */}
