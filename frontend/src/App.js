@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { useState } from 'react';
 import EventIcon from '@mui/icons-material/Event';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import DateRangeIcon from '@mui/icons-material/DateRange';
@@ -14,14 +14,10 @@ import {
   Fade,
   Chip
 } from '@mui/material';
-import CreateEvent from './pages/CreateEvent';
-import SingleEvent from './pages/SingleEvent';
-import LivePreview from './pages/LivePreview';
+import CreateYourEvent from './pages/CreateYourEvent';
 import EventProgressTracker from './components/EventProgressTracker';
 import { ArrowBack } from '@mui/icons-material';
 
-export const StepContext = createContext();
-export const useStep = () => useContext(StepContext);
 
 const theme = createTheme({
   palette: {
@@ -125,94 +121,13 @@ const theme = createTheme({
   },
 });
 
-const EventTypeCard = ({ type, title, description, icon, isSelected, onClick }) => (
-  <Paper
-    elevation={isSelected ? 8 : 2}
-    sx={{
-      p: 3,
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      border: isSelected ? '2px solid #6366f1' : '2px solid transparent',
-      background: isSelected 
-        ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%)'
-        : 'white',
-      '&:hover': {
-        transform: 'translateY(-4px)',
-        boxShadow: '0 8px 25px rgba(0,0,0,0.12)',
-      },
-      width: 280,
-      height: 160,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-    }}
-    onClick={() => onClick(type)}
-  >
-    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-      <Box
-        sx={{
-          p: 1.5,
-          borderRadius: 2,
-          backgroundColor: isSelected ? '#6366f1' : '#f3f4f6',
-          color: isSelected ? 'white' : '#6b7280',
-          mr: 2,
-        }}
-      >
-        {icon}
-      </Box>
-      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-        {title}
-      </Typography>
-    </Box>
-    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-      {description}
-    </Typography>
-    {isSelected && (
-      <Chip
-        label="Selected"
-        size="small"
-        sx={{
-          alignSelf: 'flex-start',
-          mt: 1,
-          backgroundColor: '#6366f1',
-          color: 'white',
-        }}
-      />
-    )}
-  </Paper>
-);
-
 export default function App() {
   const [page, setPage] = useState('landing');
-  const [eventType, setEventType] = useState('single');
-  const [activeStep, setActiveStep] = useState(0);
-  const stepValue = { activeStep, setActiveStep };
-
-  const eventTypeOptions = [
-    {
-      type: 'single',
-      title: 'Single Event',
-      description: 'A one-time event happening on a specific date and time',
-      icon: <EventIcon />,
-    },
-    {
-      type: 'day',
-      title: 'Full Day',
-      description: 'An all-day event lasting an entire calendar day',
-      icon: <CalendarTodayIcon />,
-    },
-    {
-      type: 'multiDay',
-      title: 'Multi-Day',
-      description: 'An event spanning multiple consecutive days',
-      icon: <DateRangeIcon />,
-    },
-  ];
 
 const BackButton = () => (
     <Button
       variant="text"
-      onClick={() => page === 'typeSelect' ? setPage('landing') : setPage('typeSelect')}
+      onClick={() => setPage('landing')}
       sx={{
         mb: 3,
         color: '#6366f1',
@@ -231,7 +146,6 @@ const BackButton = () => (
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <StepContext.Provider value={stepValue}>
         {/* Global Header */}
         <Box
           sx={{
@@ -388,7 +302,7 @@ const BackButton = () => (
                       <Button
                         variant="contained"
                         size="large"
-                        onClick={() => setPage('typeSelect')}
+                        onClick={() => setPage('create')}
                         sx={{
                           py: 2,
                           px: 4,
@@ -701,130 +615,18 @@ const BackButton = () => (
           </Box>
         )}
 
-        {page === 'typeSelect' && (
-          <Box
-            sx={{
-              minHeight: '100vh',
-              backgroundColor: '#fafafb',
-              pt: 30, // Add padding top for global header
-              pb: 6,
-            }}
-          >
-            <Container maxWidth="lg">
-              <BackButton />
-              <Fade in timeout={600}>
-                <Box sx={{ textAlign: 'center', mb: 6 }}>
-                  <Typography 
-                    variant="h3" 
-                    gutterBottom
-                    sx={{ 
-                      color: '#1f2937',
-                      mb: 2,
-                      pt: 4,
-                    }}
-                  >
-                    Choose Your Event Type
-                  </Typography>
-                  <Typography 
-                    variant="subtitle1" 
-                    color="text.secondary"
-                    sx={{ maxWidth: 600, mx: 'auto' }}
-                  >
-                    Select the type of event you'd like to create. Each type offers different planning features.
-                  </Typography>
-                </Box>
-              </Fade>
-
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  gap: 4, 
-                  justifyContent: 'center',
-                  flexWrap: 'wrap',
-                  mb: 6,
-                }}
-              >
-                {eventTypeOptions.map((option, index) => (
-                  <Fade in timeout={800 + index * 200} key={option.type}>
-                    <div>
-                      <EventTypeCard
-                        {...option}
-                        isSelected={eventType === option.type}
-                        onClick={setEventType}
-                      />
-                    </div>
-                  </Fade>
-                ))}
-              </Box>
-
-              <Fade in timeout={1200}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={() => setPage(eventType)}
-                    sx={{
-                      py: 2,
-                      px: 6,
-                      fontSize: '1.1rem',
-                    }}
-                  >
-                    Continue to Planning
-                  </Button>
-                </Box>
-              </Fade>
-            </Container>
-          </Box>
-        )}
-
-        {(page === 'single' || page === 'day' || page === 'multiDay') && (
+        {page === 'create' && (
           <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#fafafb', pt: 8 }}>
-            {page === 'single' && (
-              <EventProgressTracker 
-                activities={[]} // We'll need to pass actual activities from SingleEvent
-                hasVotingEnabled={false} // We'll need to pass this too
-              />
-            )}
-            
-            {page !== 'single' && (
-              <Box
-                sx={{ 
-                  width: '35%', 
-                  borderRight: '2px solid #e5e7eb',
-                  backgroundColor: 'white',
-                  pt: 2,
-                  overflow: 'auto',
-                  boxShadow: '2px 0 4px rgba(0,0,0,0.05)',
-                }}
-              >
-                <Box sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 2, color: '#374151', fontWeight: 600 }}>
-                    Live Preview
-                  </Typography>
-                  <LivePreview eventType={eventType} />
-                </Box>
-              </Box>
-            )}
-            
-            <Box sx={{ 
-              flexGrow: 1, 
-              pt: 2, 
-              overflow: 'auto',
-              ml: page === 'single' ? '280px' : 0 // Add margin for progress tracker
-            }}>
+            <EventProgressTracker activities={[]} />
+            <Box sx={{ flexGrow: 1, pt: 2, overflow: 'auto', ml: '280px' }}>
               <Container maxWidth="md" sx={{ py: 4 }}>
                 <BackButton />
-                {page === 'single' ? (
-                  <SingleEvent />
-                ) : (
-                  <CreateEvent eventType={eventType} />
-                )}
+                <CreateYourEvent />
               </Container>
             </Box>
           </Box>
         )}
 
-      </StepContext.Provider>
     </ThemeProvider>
   );
 }
