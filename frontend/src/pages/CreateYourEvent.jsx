@@ -16,6 +16,8 @@ import {
   ToggleButton,
   Divider
 } from '@mui/material';
+
+import { DeleteOutline, EventNote, Schedule, AddCircle } from '@mui/icons-material';
 import { DeleteOutline, EventNote, Schedule, LocationOn, AddCircle } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import PreviewEvent from './PreviewEvent';
@@ -56,6 +58,9 @@ export default function CreateYourEvent() {
 
   const [showPreview, setShowPreview] = useState(false);
 
+  const [supports, setSupports] = useState([]);
+  const [choiceCount, setChoiceCount] = useState('');
+
   const handleActivityChange = (index, field, value) => {
     const updated = [...activities];
     updated[index][field] = value;
@@ -81,6 +86,25 @@ export default function CreateYourEvent() {
     updated[activityIndex].dateTimeSuggestions[suggestionIndex][field] = value;
     setActivities(updated);
   };
+
+
+  const handleSupportChange = (index, field, value) => {
+    const updated = [...supports];
+    updated[index][field] = value;
+    setSupports(updated);
+  };
+
+  const addSupport = () => {
+    setSupports(prev => [
+      ...prev,
+      { category: '', name: '', cost: '' }
+    ]);
+  };
+
+  const removeSupport = (index) => {
+    setSupports(prev => prev.filter((_, i) => i !== index));
+  };
+
 
   const addSuggestion = (activityIndex) => {
     const updated = [...activities];
@@ -144,7 +168,9 @@ export default function CreateYourEvent() {
       ...eventData,
       name: firstActivity.name, // Use activity name as event name
       description: firstActivity.description, // Use activity description as event description
+
       location: eventData.location || firstActivity.location,
+
       date: firstActivity.dateMode === 'single' ? firstActivity.date : '',
       time: firstActivity.dateMode === 'single' ? firstActivity.time : '',
       startDate: firstActivity.dateMode === 'range' ? firstActivity.startDate : '',
@@ -155,6 +181,9 @@ export default function CreateYourEvent() {
 
     const payload = {
       ...formattedEventData,
+      activities: activities,
+      supports: supports,
+      choiceCount: choiceCount
       activities: activities
     };
 
@@ -191,6 +220,8 @@ export default function CreateYourEvent() {
         dateMode={firstActivity.dateMode}
         dateTimeSuggestions={firstActivity.dateMode === 'suggestions' ? firstActivity.dateTimeSuggestions : null}
         activities={activities}
+        supports={supports}
+        choiceCount={choiceCount}
         onEdit={() => setShowPreview(false)}
         onConfirm={handleConfirmAndSubmit}
       />
@@ -204,12 +235,23 @@ export default function CreateYourEvent() {
           Create Your Event
         </Typography>
         <Typography variant="body1" color="text.secondary" className="single-event-subtitle">
+          Plan meaningful adventures and create lasting memories.
           Perfect for one-time activities like dinners, meetings, or social gatherings.
         </Typography>
       </div>
 
       <Paper elevation={2} className="single-event-paper">
         <form>
+          {/* Craft Your Adventure */}
+          <Box className="craft-adventure">
+            <Typography variant="h6" className="section-title" sx={{ mb: 2 }}>
+              Craft Your Adventure
+            </Typography>
+
+            {/* Activities Section */}
+            <Box className="activities-header">
+              <Typography variant="subtitle1" className="section-title">
+                Activities
           {/* Activity Section */}
           <Box>
             <Box className="activities-header">
@@ -263,6 +305,7 @@ export default function CreateYourEvent() {
                         className="form-input form-input-with-icon"
                       />
                     </Grid>
+
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
@@ -286,6 +329,7 @@ export default function CreateYourEvent() {
                         className="form-input"
                       />
                     </Grid>
+
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
@@ -304,16 +348,26 @@ export default function CreateYourEvent() {
                             <Schedule />
                             Date & Time Selection
                           </Typography>
+
+                          <ToggleButtonGroup
+                            value={activity.dateMode}
+                            exclusive
+                            onChange={(event, mode) => handleDateModeChange(activityIndex, event, mode)}
                           <ToggleButtonGroup 
                             value={activity.dateMode} 
                             exclusive 
                             onChange={(event, mode) => handleDateModeChange(activityIndex, event, mode)} 
+
                             size="small"
                             className="date-mode-toggle"
                           >
                             <ToggleButton value="single">Single Time</ToggleButton>
+
+                            <ToggleButton value="range">Date Range</ToggleButton>
+
                             {/* Don't need a range unless we're opening it up for suggestions */}
                             {/* <ToggleButton value="range">Date Range</ToggleButton> */}
+
                             <ToggleButton value="suggestions">Let People Choose</ToggleButton>
                           </ToggleButtonGroup>
                         </Box>
@@ -601,6 +655,78 @@ export default function CreateYourEvent() {
                 </Typography>
               </Box>
             )}
+
+            {/* Participants must select X */}
+            {activities.length > 1 && (
+              <Box sx={{ my: 2 }}>
+                <TextField
+                  label="Participants must select"
+                  type="number"
+                  value={choiceCount}
+                  onChange={e => setChoiceCount(e.target.value)}
+                  InputProps={{ inputProps: { min: 1, max: activities.length } }}
+                />
+              </Box>
+            )}
+
+            {/* Activity Support Section */}
+            <Box sx={{ mt: 4 }}>
+              <Box className="activities-header">
+                <Typography variant="subtitle1" className="section-title">
+                  Activity Support
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<AddCircle />}
+                  onClick={addSupport}
+                  size="small"
+                  className="add-activity-btn"
+                >
+                  Add Support Option
+                </Button>
+              </Box>
+
+              {supports.map((s, i) => (
+                <Card key={i} className="activity-card">
+                  <CardContent className="activity-card-content">
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          fullWidth
+                          label="Category"
+                          value={s.category}
+                          onChange={e => handleSupportChange(i, 'category', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          fullWidth
+                          label="Name"
+                          value={s.name}
+                          onChange={e => handleSupportChange(i, 'name', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={3}>
+                        <TextField
+                          fullWidth
+                          label="Cost ($)"
+                          type="number"
+                          value={s.cost}
+                          onChange={e => handleSupportChange(i, 'cost', e.target.value)}
+                          InputProps={{ inputProps: { min: 0 } }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={1}>
+                        <IconButton color="error" onClick={() => removeSupport(i)}>
+                          <DeleteOutline />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+
           </Box>
 
           {/* Preview Button */}

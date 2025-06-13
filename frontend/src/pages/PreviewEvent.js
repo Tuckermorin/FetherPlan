@@ -12,13 +12,12 @@ import {
   // Chip
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-import PlaceIcon from '@mui/icons-material/Place';
 // import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import GroupIcon from '@mui/icons-material/Group';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 
-const PreviewEvent = ({ eventData, dateMode, dateTimeSuggestions, activities, onEdit, onConfirm }) => {
+const PreviewEvent = ({ eventData, dateMode, dateTimeSuggestions, activities, supports, choiceCount, onEdit, onConfirm }) => {
   // Create a default empty itinerary array if not provided
   // const itinerary = eventData.itinerary || [];
 
@@ -34,10 +33,6 @@ const PreviewEvent = ({ eventData, dateMode, dateTimeSuggestions, activities, on
           {eventData.name || 'Unnamed Event'}
         </Typography>
 
-        <Box display="flex" alignItems="center" mb={2}>
-          <PlaceIcon color="action" style={{ marginRight: '8px' }} />
-          <Typography variant="subtitle1">{eventData.location || 'No location specified'}</Typography>
-        </Box>
 
         {dateMode === 'single' && (
           <Box display="flex" alignItems="center" mb={2}>
@@ -111,14 +106,11 @@ const PreviewEvent = ({ eventData, dateMode, dateTimeSuggestions, activities, on
                 <ListItemText
                   primary={activity.name || `Activity ${index + 1}`}
                   secondary={
-                    <>
-                      {activity.location && `Location: ${activity.location}`}
-                      {activity.costMode === 'fixed' && activity.cost ? 
-                        <Box mt={1}>Cost: ${activity.cost}</Box> : 
-                        activity.costMode === 'range' && activity.minCost && activity.maxCost ? 
-                        <Box mt={1}>Cost Range: ${activity.minCost} - ${activity.maxCost}</Box> : null
-                      }
-                    </>
+                    activity.costMode === 'fixed' && activity.cost ? (
+                      <Box mt={1}>Cost: ${activity.cost}</Box>
+                    ) : activity.costMode === 'range' && activity.minCost && activity.maxCost ? (
+                      <Box mt={1}>Cost Range: ${activity.minCost} - ${activity.maxCost}</Box>
+                    ) : null
                   }
                 />
               </ListItem>
@@ -126,6 +118,31 @@ const PreviewEvent = ({ eventData, dateMode, dateTimeSuggestions, activities, on
           </List>
         ) : (
           <Typography>No activities added yet.</Typography>
+        )}
+
+        {choiceCount && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Participants must select {choiceCount} option{choiceCount > 1 ? 's' : ''}.
+          </Typography>
+        )}
+
+        <Divider style={{ margin: '1.5rem 0' }} />
+
+        {/* Activity Support */}
+        <Typography variant="h6" gutterBottom>Activity Support</Typography>
+        {supports && supports.length > 0 ? (
+          <List>
+            {supports.map((support, index) => (
+              <ListItem key={index} divider={index < supports.length - 1}>
+                <ListItemText
+                  primary={support.name || `Option ${index + 1}`}
+                  secondary={support.cost ? `Cost: $${support.cost}` : null}
+                />
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography>No support options added.</Typography>
         )}
 
         <Divider style={{ margin: '1.5rem 0' }} />
