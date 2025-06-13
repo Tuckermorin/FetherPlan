@@ -19,9 +19,9 @@ import {
 import { DeleteOutline, EventNote, Schedule, LocationOn, AddCircle } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import PreviewEvent from './PreviewEvent';
-import './SingleEvent.css';
+import './CreateYourEvent.css';
 
-export default function SingleEvent() {
+export default function CreateYourEvent() {
   const [eventData] = useState({
     isPublic: true,
     rsvpDeadline: '',
@@ -201,7 +201,7 @@ export default function SingleEvent() {
     <Container maxWidth="md" className="single-event-container">
       <div className="single-event-header">
         <Typography variant="h4" gutterBottom className="single-event-title">
-          Create Single Event
+          Create Your Event
         </Typography>
         <Typography variant="body1" color="text.secondary" className="single-event-subtitle">
           Perfect for one-time activities like dinners, meetings, or social gatherings.
