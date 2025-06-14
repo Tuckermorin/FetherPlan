@@ -11,12 +11,15 @@ const EventProgressTracker = ({ activities = [] }) => {
       (first.dateMode === 'range' && first.startDate && first.endDate) ||
       (first.dateMode === 'suggestions' && first.dateTimeSuggestions && first.dateTimeSuggestions.length));
 
+    first.name && first.location && first.description && first.date && first.time;
+
   const status = {
     step1: { complete: !!step1Complete, active: !step1Complete },
     step2: { complete: false, active: !!step1Complete },
     step3: { complete: false, active: false },
     step4: { complete: false, active: false },
     step5: { complete: false, active: false },
+
   };
 
   const StepIcon = ({ complete, active }) => {
@@ -24,6 +27,16 @@ const EventProgressTracker = ({ activities = [] }) => {
     if (active) return <RadioButtonUnchecked className="step-icon active" />;
     return <RadioButtonUnchecked className="step-icon inactive" />;
   };
+
+
+  };
+
+  const StepIcon = ({ complete, active }) => {
+    if (complete) return <CheckCircle className="step-icon complete" />;
+    if (active) return <RadioButtonUnchecked className="step-icon active" />;
+    return <RadioButtonUnchecked className="step-icon inactive" />;
+  };
+
 
   return (
     <Box className="progress-tracker">
@@ -53,6 +66,7 @@ const EventProgressTracker = ({ activities = [] }) => {
           <Box className="step-indicator">
             <StepIcon {...status.step2} />
             <Box className="step-line" />
+
           </Box>
           <Box className="step-content">
             <Typography variant="subtitle1" className="step-title">
@@ -62,6 +76,17 @@ const EventProgressTracker = ({ activities = [] }) => {
               Waiting for participant responses
             </Typography>
           </Box>
+
+          </Box>
+          <Box className="step-content">
+            <Typography variant="subtitle1" className="step-title">
+              Gathering Data
+            </Typography>
+            <Typography variant="body2" className="step-description">
+              Waiting for participant responses
+            </Typography>
+          </Box>
+
         </Box>
 
         <Box className="progress-step">
@@ -75,9 +100,28 @@ const EventProgressTracker = ({ activities = [] }) => {
             </Typography>
             <Typography variant="body2" className="step-description">
               Finalize the event plan
+
+
             </Typography>
           </Box>
         </Box>
+
+        <Box className="progress-step">
+          <Box className="step-indicator">
+            <StepIcon {...status.step4} />
+            <Box className="step-line" />
+          </Box>
+          <Box className="step-content">
+            <Typography variant="subtitle1" className="step-title">
+              Participant Confirmation
+            </Typography>
+            <Typography variant="body2" className="step-description">
+              Awaiting final confirmations
+
+            </Typography>
+          </Box>
+        </Box>
+
 
         <Box className="progress-step">
           <Box className="step-indicator">
