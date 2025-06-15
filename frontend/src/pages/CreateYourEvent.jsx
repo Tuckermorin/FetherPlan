@@ -415,38 +415,26 @@ export default function CreateYourEvent() {
                     <CardContent className="activity-card-content" sx={{ position: 'relative', paddingBottom: '60px' }}>
                       {activity.isCompleted ? (
                         // Collapsed view for completed activities
-                        <Box>
-                          <Box className="activity-option-header">
-                            <Box>
-                              <Typography variant="subtitle1" className="activity-option-title">
-                                {activity.name || 'Unnamed Activity'}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {activity.timeCommitment && `Time: ${activity.timeCommitment}`}
-                                {activity.timeCommitment && (activity.cost || (activity.minCost && activity.maxCost)) && ' • '}
-                                {activity.costMode === 'fixed' && activity.cost && `Cost: ${activity.cost}`}
-                                {activity.costMode === 'range' && activity.minCost && activity.maxCost && `Cost: ${activity.minCost} - ${activity.maxCost}`}
-                              </Typography>
-                            </Box>
-                            <Box>
-                              <IconButton 
-                                onClick={() => updateActivity(activity.id, 'isCompleted', false)}
-                                size="small"
-                                sx={{ mr: 1 }}
-                              >
-                                <EventNote />
-                              </IconButton>
-                              <IconButton 
-                                color="error" 
-                                onClick={() => removeActivity(activity.id)}
-                                size="small"
-                                className="delete-activity-btn"
-                              >
-                                <DeleteOutline />
-                              </IconButton>
-                            </Box>
-                          </Box>
-                        </Box>
+                        <Card className="completed-activity-card">
+                          <div className="completed-activity-header">
+                            <a onClick={() => updateActivity(activity.id, 'isCompleted', false)}>Edit Event</a>
+                            <IconButton size="small" onClick={() => updateActivity(activity.id, 'isCompleted', false)}>
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          </div>
+                          <Typography align="center" className="completed-activity-detail">
+                            {activity.name}
+                          </Typography>
+                          <Typography className="completed-activity-detail">
+                            Estimated Time: {activity.timeCommitment}
+                          </Typography>
+                          <Typography className="completed-activity-detail">
+                            Vote For Activity: {activity.isVotable ? 'Yes' : 'No'}
+                          </Typography>
+                          <Typography className="completed-activity-detail" sx={{ mt: 0.5 }}>
+                            Cost: ${activity.cost}
+                          </Typography>
+                        </Card>
                       ) : (
                         // Full form view for incomplete activities
                         <Box>
