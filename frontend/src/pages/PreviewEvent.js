@@ -1,30 +1,327 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Typography,
   Paper,
-  List,
-  ListItem,
-  ListItemText,
   Button,
   Box,
   Divider,
-  // Chip
+  Card,
+  CardContent,
+  CardActions,
+  Chip,
+  Grid,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  Alert
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-// import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import GroupIcon from '@mui/icons-material/Group';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 
-const PreviewEvent = ({ eventData, dateMode, dateTimeSuggestions, activities, supports, choiceCount, onEdit, onConfirm }) => {
-  // Create a default empty itinerary array if not provided
-  // const itinerary = eventData.itinerary || [];
+const PreviewEvent = ({ 
+  eventData, 
+  dateTimeData, 
+  activities, 
+  activitySupports, 
+  requiredActivityCount,
+  requiredSupportCount,
+  onEdit, 
+  onConfirm 
+}) => {
+  const [selectedActivities, setSelectedActivities] = useState([]);
+  const [selectedSupports, setSelectedSupports] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  const handleActivitySelection = (activityId) => {
+    setSelectedActivities(prev => {
+      if (prev.includes(activityId)) {
+        return prev.filter(id => id !== activityId);
+      } else {
+        if (requiredActivityCount && prev.length >= parseInt(requiredActivityCount)) {
+          return [...prev.slice(1), activityId]; // Replace oldest selection
+        }
+        return [...prev, activityId];
+      }
+    });
+  };
+
+  const handleSupportSelection = (supportId) => {
+    setSelectedSupports(prev => {
+      if (prev.includes(supportId)) {
+        return prev.filter(id => id !== supportId);
+      } else {
+        if (requiredSupportCount && prev.length >= parseInt(requiredSupportCount)) {
+          return [...prev.slice(1), supportId]; // Replace oldest selection
+        }
+        return [...prev, supportId];
+      }
+    });
+  };
+
+  const calculateTotalCost = () => {
+    let total = 0;
+    
+    // Calculate activity costs
+    selectedActivities.forEach(activityId => {
+      const activity = activities.find(a => a.id === activityId);
+      if (activity) {
+        if (activity.costMode === 'fixed' && activity.cost) {
+          total += parseFloat(activity.cost);
+        } else if (activity.costMode === 'range' && activity.minCost) {
+          total += parseFloat(activity.minCost); // Use minimum for estimation
+        }
+      }
+    });
+
+    // Calculate support costs
+    selectedSupports.forEach(supportId => {
+      const support = activitySupports.find(s => s.id === supportId);
+      if (support) {
+        if (support.costMode === 'fixed' && support.cost) {
+          total += parseFloat(support.cost);
+        } else if (support.costMode === 'range' && support.minCost) {
+          total += parseFloat(support.minCost); // Use minimum for estimation
+        }
+      }
+    });
+
+    return total;
+  };
+
+  const getCostDisplay = (item) => {
+    if (item.costMode === 'fixed' && item.cost) {
+      return `$${item.cost}`;
+    } else if (item.costMode === 'range' && item.minCost && item.maxCost) {
+      return `$${item.minCost} - $${item.maxCost}`;
+    }
+    return 'Cost TBD';
+  };
+
+  const getDateRangeOptions = () => {
+    if (!dateTimeData.allowParticipantSelection || !dateTimeData.startDate || !dateTimeData.endDate) {
+      return [];
+    }
+    
+    const start = new Date(dateTimeData.startDate);
+    const end = new Date(dateTimeData.endDate);
+    const dates = [];
+    
+    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+      dates.push(new Date(date).toISOString().split('T')[0]);
+    }
+    
+    return dates;
+  };
+
+  const handleDateSelection = (date) => {
+    setSelectedDates(prev => {
+      if (prev.includes(date)) {
+        return prev.filter(d => d !== date);
+      } else {
+        const requiredCount = parseInt(dateTimeData.requiredDayCount) || 1;
+        if (prev.length >= requiredCount) {
+          return [...prev.slice(1), date]; // Replace oldest selection
+        }
+        return [...prev, date];
+      }
+    });
+  };
+
+  const renderCalendar = () => {
+    const availableDates = getDateRangeOptions();
+    if (availableDates.length === 0) return null;
+
+    const startDate = new Date(dateTimeData.startDate);
+    const endDate = new Date(dateTimeData.endDate);
+    
+    // Get the first day of the month containing the start date
+    const calendarStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    const calendarEnd = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+    
+    const weeks = [];
+    let currentDate = new Date(calendarStart);
+    
+    // Start from the Sunday before the first day of the month
+    currentDate.setDate(currentDate.getDate() - currentDate.getDay());
+    
+    while (currentDate <= calendarEnd) {
+      const week = [];
+      for (let i = 0; i < 7; i++) {
+        week.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      weeks.push(week);
+    }
+
+    return (
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Select Your Available Dates
+        </Typography>
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          Select {dateTimeData.requiredDayCount || 1} day{(dateTimeData.requiredDayCount || 1) > 1 ? 's' : ''} from the available range
+        </Typography>
+        
+        <Box sx={{ border: 1, borderColor: 'grey.300', borderRadius: 1, p: 2, mt: 2 }}>
+          {/* Calendar Header */}
+          <Grid container spacing={0} sx={{ mb: 1 }}>
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <Grid item xs key={day}>
+                <Typography variant="body2" align="center" fontWeight="bold">
+                  {day}
+                </Typography>
+              </Grid>
+            ))}
+          </Grid>
+          
+          {/* Calendar Body */}
+          {weeks.map((week, weekIndex) => (
+            <Grid container spacing={0} key={weekIndex}>
+              {week.map((date, dayIndex) => {
+                const dateStr = date.toISOString().split('T')[0];
+                const isAvailable = availableDates.includes(dateStr);
+                const isSelected = selectedDates.includes(dateStr);
+                const isOutOfRange = date < startDate || date > endDate;
+                
+                return (
+                  <Grid item xs key={dayIndex}>
+                    <Button
+                      variant={isSelected ? "contained" : "outlined"}
+                      size="small"
+                      onClick={() => isAvailable && handleDateSelection(dateStr)}
+                      disabled={!isAvailable}
+                      sx={{
+                        minWidth: 0,
+                        width: '100%',
+                        height: 40,
+                        fontSize: '0.75rem',
+                        color: isOutOfRange ? 'grey.400' : 'inherit',
+                        backgroundColor: isSelected ? 'primary.main' : 'inherit',
+                        '&:hover': {
+                          backgroundColor: isAvailable && !isSelected ? 'primary.light' : 'inherit'
+                        }
+                      }}
+                    >
+                      {date.getDate()}
+                    </Button>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          ))}
+        </Box>
+        
+        {selectedDates.length > 0 && (
+          <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Selected Dates ({selectedDates.length}/{dateTimeData.requiredDayCount || 1}):
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {selectedDates.map(date => (
+                <Chip 
+                  key={date} 
+                  label={new Date(date).toLocaleDateString()}
+                  onDelete={() => handleDateSelection(date)}
+                  size="small"
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
+  if (showConfirmation) {
+    return (
+      <Container maxWidth="md" style={{ marginTop: '2rem' }}>
+        <Typography variant="h4" align="center" gutterBottom>
+          Selection Confirmation
+        </Typography>
+
+        <Paper elevation={3} style={{ padding: '2rem', marginBottom: '2rem' }}>
+          <Typography variant="h5" gutterBottom>
+            {eventData.name || 'Your Event'}
+          </Typography>
+
+          {/* Selected Activities */}
+          {selectedActivities.length > 0 && (
+            <>
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                Selected Activities
+              </Typography>
+              {selectedActivities.map(activityId => {
+                const activity = activities.find(a => a.id === activityId);
+                return activity ? (
+                  <Card key={activityId} sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Typography variant="subtitle1">{activity.name}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {activity.timeCommitment && `Time: ${activity.timeCommitment}`}
+                      </Typography>
+                      <Typography variant="body2" color="primary">
+                        {getCostDisplay(activity)}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ) : null;
+              })}
+            </>
+          )}
+
+          {/* Selected Support Options */}
+          {selectedSupports.length > 0 && (
+            <>
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                Selected Support Options
+              </Typography>
+              {selectedSupports.map(supportId => {
+                const support = activitySupports.find(s => s.id === supportId);
+                return support ? (
+                  <Card key={supportId} sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Typography variant="subtitle1">{support.option}</Typography>
+                      <Typography variant="body2" color="primary">
+                        {getCostDisplay(support)}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ) : null;
+              })}
+            </>
+          )}
+
+          {/* Total Cost */}
+          <Box sx={{ mt: 3, p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
+            <Typography variant="h6" align="center">
+              Estimated Total Cost: ${calculateTotalCost().toFixed(2)}
+            </Typography>
+          </Box>
+        </Paper>
+
+        {/* Action Buttons */}
+        <Box display="flex" justifyContent="space-between">
+          <Button variant="outlined" onClick={() => setShowConfirmation(false)}>
+            Back to Preview
+          </Button>
+          <Button variant="contained" color="success" onClick={onConfirm}>
+            Confirm & Publish Event
+          </Button>
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md" style={{ marginTop: '2rem' }}>
       <Typography variant="h4" align="center" gutterBottom>
-        Preview Your Event
+        Event Preview - Participant View
       </Typography>
 
       <Paper elevation={3} style={{ padding: '2rem', marginBottom: '2rem' }}>
@@ -33,140 +330,269 @@ const PreviewEvent = ({ eventData, dateMode, dateTimeSuggestions, activities, su
           {eventData.name || 'Unnamed Event'}
         </Typography>
 
+        <Typography variant="body1" paragraph>
+          {eventData.description || 'No description provided.'}
+        </Typography>
 
-        {dateMode === 'single' && (
-          <Box display="flex" alignItems="center" mb={2}>
-            <EventIcon color="action" style={{ marginRight: '8px' }} />
-            <Typography variant="subtitle1">Date: {eventData.date || 'Not set'} {eventData.time ? `at ${eventData.time}` : ''}</Typography>
-          </Box>
-        )}
-
-        {dateMode === 'range' && (
+        {/* Date & Time Display */}
+        {dateTimeData.dateMode === 'single' && (
           <Box display="flex" alignItems="center" mb={2}>
             <EventIcon color="action" style={{ marginRight: '8px' }} />
             <Typography variant="subtitle1">
-              From: {eventData.startDate || 'Not set'} To: {eventData.endDate || 'Not set'} 
-              {eventData.time ? ` at ${eventData.time}` : ''}
+              Date: {dateTimeData.date || 'Not set'} 
+              {dateTimeData.time ? ` at ${dateTimeData.time}` : ''}
             </Typography>
           </Box>
         )}
 
-        {dateMode === 'suggestions' && dateTimeSuggestions && (
+        {dateTimeData.dateMode === 'range' && !dateTimeData.allowParticipantSelection && (
+          <Box display="flex" alignItems="center" mb={2}>
+            <EventIcon color="action" style={{ marginRight: '8px' }} />
+            <Typography variant="subtitle1">
+              From: {dateTimeData.startDate || 'Not set'} To: {dateTimeData.endDate || 'Not set'}
+              {dateTimeData.time ? ` at ${dateTimeData.time}` : ''}
+            </Typography>
+          </Box>
+        )}
+
+        {dateTimeData.dateMode === 'range' && dateTimeData.allowParticipantSelection && (
           <>
-            <Box display="flex" alignItems="flex-start" mb={2}>
-              <EventIcon color="action" style={{ marginRight: '8px', marginTop: '4px' }} />
-              <Box>
-                <Typography variant="subtitle1">Date & Time Options:</Typography>
-                <List dense>
-                  {dateTimeSuggestions.map((suggestion, index) => (
-                    <ListItem key={index}>
-                      <ListItemText 
-                        primary={`Option ${index + 1}: ${suggestion.startDate}${suggestion.endDate ? ` to ${suggestion.endDate}` : ''}`}
-                        secondary={suggestion.time ? `Time: ${suggestion.time}` : 'No time specified'}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </Box>
+            <Box display="flex" alignItems="center" mb={2}>
+              <EventIcon color="action" style={{ marginRight: '8px' }} />
+              <Typography variant="subtitle1">
+                Event Period: {dateTimeData.startDate || 'Not set'} to {dateTimeData.endDate || 'Not set'}
+                {dateTimeData.time ? ` at ${dateTimeData.time}` : ''}
+              </Typography>
             </Box>
+            
+            {!showCalendar ? (
+              <Box sx={{ mt: 2, p: 2, border: 1, borderColor: 'grey.300', borderRadius: 1 }}>
+                <Typography variant="h6" gutterBottom>
+                  Date Selection Required
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Please select {dateTimeData.requiredDayCount || 1} day{(dateTimeData.requiredDayCount || 1) > 1 ? 's' : ''} that work for you within the event period.
+                </Typography>
+                <Button 
+                  variant="contained" 
+                  onClick={() => setShowCalendar(true)}
+                  sx={{ mt: 1 }}
+                >
+                  Select Available Dates
+                </Button>
+              </Box>
+            ) : (
+              <>
+                {renderCalendar()}
+                <Box sx={{ mt: 2 }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={() => setShowCalendar(false)}
+                    sx={{ mr: 1 }}
+                  >
+                    Hide Calendar
+                  </Button>
+                  {selectedDates.length < (parseInt(dateTimeData.requiredDayCount) || 1) && (
+                    <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                      Please select {(parseInt(dateTimeData.requiredDayCount) || 1) - selectedDates.length} more day{((parseInt(dateTimeData.requiredDayCount) || 1) - selectedDates.length) > 1 ? 's' : ''}.
+                    </Typography>
+                  )}
+                </Box>
+              </>
+            )}
           </>
         )}
 
         <Divider style={{ margin: '1.5rem 0' }} />
 
-        {/* Description */}
-        <Typography variant="h6" gutterBottom>Description</Typography>
-        <Typography variant="body1" paragraph>{eventData.description || 'No description provided.'}</Typography>
-
-        <Divider style={{ margin: '1.5rem 0' }} />
-
-        {/* RSVP / Participants */}
-        {eventData.maxParticipants && (
-          <Box display="flex" alignItems="center" mb={2}>
-            <GroupIcon color="action" style={{ marginRight: '8px' }} />
-            <Typography variant="subtitle1">Max Participants: {eventData.maxParticipants}</Typography>
-          </Box>
-        )}
-
-        {eventData.rsvpDeadline && (
-          <Box display="flex" alignItems="center" mb={2}>
-            <EventIcon color="action" style={{ marginRight: '8px' }} />
-            <Typography variant="subtitle1">RSVP Deadline: {eventData.rsvpDeadline}</Typography>
-          </Box>
-        )}
-
-        <Divider style={{ margin: '1.5rem 0' }} />
-
-        {/* Activities */}
-        <Typography variant="h6" gutterBottom>Activities</Typography>
-        {activities && activities.length > 0 ? (
-          <List>
-            {activities.map((activity, index) => (
-              <ListItem key={index} divider={index < activities.length - 1}>
-                <ListItemText
-                  primary={activity.name || `Activity ${index + 1}`}
-                  secondary={
-                    activity.costMode === 'fixed' && activity.cost ? (
-                      <Box mt={1}>Cost: ${activity.cost}</Box>
-                    ) : activity.costMode === 'range' && activity.minCost && activity.maxCost ? (
-                      <Box mt={1}>Cost Range: ${activity.minCost} - ${activity.maxCost}</Box>
-                    ) : null
-                  }
+        {/* Activities Section */}
+        {activities.length > 0 && (
+          <>
+            <Typography variant="h6" gutterBottom>
+              Activities
+              {requiredActivityCount && (
+                <Chip 
+                  label={`Select ${requiredActivityCount}`} 
+                  size="small" 
+                  color="primary" 
+                  sx={{ ml: 2 }} 
                 />
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <Typography>No activities added yet.</Typography>
-        )}
+              )}
+            </Typography>
+            
+            {requiredActivityCount && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Please select {requiredActivityCount} activit{requiredActivityCount > 1 ? 'ies' : 'y'} from the options below.
+              </Alert>
+            )}
 
-        {choiceCount && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Participants must select {choiceCount} option{choiceCount > 1 ? 's' : ''}.
-          </Typography>
+            <Grid container spacing={2}>
+              {activities.map((activity) => (
+                <Grid item xs={12} md={6} key={activity.id}>
+                  <Card 
+                    sx={{ 
+                      cursor: activity.isVotable ? 'pointer' : 'default',
+                      border: selectedActivities.includes(activity.id) ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                      '&:hover': activity.isVotable ? { boxShadow: 2 } : {}
+                    }}
+                    onClick={() => activity.isVotable && handleActivitySelection(activity.id)}
+                  >
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {activity.name}
+                        {!activity.isVotable && <Chip label="Fixed" size="small" sx={{ ml: 1 }} />}
+                      </Typography>
+                      
+                      {activity.timeCommitment && (
+                        <Box display="flex" alignItems="center" mb={1}>
+                          <AccessTimeIcon fontSize="small" style={{ marginRight: '4px' }} />
+                          <Typography variant="body2">{activity.timeCommitment}</Typography>
+                        </Box>
+                      )}
+
+                      <Box display="flex" alignItems="center" mb={1}>
+                        <AttachMoneyIcon fontSize="small" style={{ marginRight: '4px' }} />
+                        <Typography variant="body2" color="primary">
+                          {getCostDisplay(activity)}
+                        </Typography>
+                      </Box>
+
+                      {activity.equipmentEnabled && activity.equipmentItems && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                          Equipment needed: {activity.equipmentItems}
+                        </Typography>
+                      )}
+
+                      {activity.link && (
+                        <CardActions>
+                          <Button size="small" href={activity.link} target="_blank">
+                            Learn More
+                          </Button>
+                        </CardActions>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </>
         )}
 
         <Divider style={{ margin: '1.5rem 0' }} />
 
-        {/* Activity Support */}
-        <Typography variant="h6" gutterBottom>Activity Support</Typography>
-        {supports && supports.length > 0 ? (
-          <List>
-            {supports.map((support, index) => (
-              <ListItem key={index} divider={index < supports.length - 1}>
-                <ListItemText
-                  primary={support.name || `Option ${index + 1}`}
-                  secondary={support.cost ? `Cost: $${support.cost}` : null}
+        {/* Activity Support Section */}
+        {activitySupports.length > 0 && (
+          <>
+            <Typography variant="h6" gutterBottom>
+              Activity Support Options
+              {requiredSupportCount && (
+                <Chip 
+                  label={`Select ${requiredSupportCount}`} 
+                  size="small" 
+                  color="primary" 
+                  sx={{ ml: 2 }} 
                 />
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <Typography>No support options added.</Typography>
+              )}
+            </Typography>
+
+            {requiredSupportCount && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Please select {requiredSupportCount} support option{requiredSupportCount > 1 ? 's' : ''} from the categories below.
+              </Alert>
+            )}
+
+            <Grid container spacing={2}>
+              {activitySupports.map((support) => (
+                <Grid item xs={12} md={6} key={support.id}>
+                  <Card 
+                    sx={{ 
+                      cursor: support.isVotable ? 'pointer' : 'default',
+                      border: selectedSupports.includes(support.id) ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                      '&:hover': support.isVotable ? { boxShadow: 2 } : {}
+                    }}
+                    onClick={() => support.isVotable && handleSupportSelection(support.id)}
+                  >
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {support.option}
+                        {!support.isVotable && <Chip label="Fixed" size="small" sx={{ ml: 1 }} />}
+                      </Typography>
+                      
+                      <Box display="flex" alignItems="center" mb={1}>
+                        <AttachMoneyIcon fontSize="small" style={{ marginRight: '4px' }} />
+                        <Typography variant="body2" color="primary">
+                          {getCostDisplay(support)}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </>
         )}
 
         <Divider style={{ margin: '1.5rem 0' }} />
 
-        {/* Visibility */}
+        {/* Event Visibility */}
         <Box display="flex" alignItems="center" mb={2}>
           {eventData.isPublic ? <PublicIcon color="primary" /> : <LockIcon color="error" />}
           <Typography variant="subtitle1" style={{ marginLeft: '0.5rem' }}>
             {eventData.isPublic ? 'Public Event' : 'Private Event'}
           </Typography>
         </Box>
+
+        {/* Selection Summary */}
+        {(selectedActivities.length > 0 || selectedSupports.length > 0) && (
+          <>
+            <Divider style={{ margin: '1.5rem 0' }} />
+            <Box sx={{ bgcolor: 'grey.100', p: 2, borderRadius: 1 }}>
+              <Typography variant="h6" gutterBottom>
+                Your Current Selections
+              </Typography>
+              
+              {selectedActivities.length > 0 && (
+                <Typography variant="body2">
+                  Activities: {selectedActivities.length} selected
+                </Typography>
+              )}
+              
+              {selectedSupports.length > 0 && (
+                <Typography variant="body2">
+                  Support Options: {selectedSupports.length} selected
+                </Typography>
+              )}
+              
+              <Typography variant="subtitle1" color="primary" sx={{ mt: 1 }}>
+                Estimated Total: ${calculateTotalCost().toFixed(2)}
+              </Typography>
+            </Box>
+          </>
+        )}
       </Paper>
 
       {/* Action Buttons */}
       <Box display="flex" justifyContent="space-between">
         <Button variant="outlined" color="primary" onClick={onEdit}>
-          Edit Event
+          Edit Event (Admin View)
         </Button>
-        <Button variant="contained" color="success" onClick={onConfirm}>
-          Confirm & Publish
-        </Button>
+        <Box>
+          {(selectedActivities.length > 0 || selectedSupports.length > 0) && (
+            <Button 
+              variant="outlined" 
+              onClick={() => setShowConfirmation(true)}
+              sx={{ mr: 2 }}
+            >
+              View Selection Summary
+            </Button>
+          )}
+          <Button variant="contained" color="success" onClick={onConfirm}>
+            Publish Event
+          </Button>
+        </Box>
       </Box>
     </Container>
   );
 };
 
-export default PreviewEvent;
+export default PreviewEvent; 

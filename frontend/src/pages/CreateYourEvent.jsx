@@ -14,20 +14,19 @@ import {
   FormControlLabel,
   ToggleButtonGroup,
   ToggleButton,
-  Divider
+  Divider,
+  Chip
 } from '@mui/material';
 
-import { DeleteOutline, EventNote, Schedule, AddCircle } from '@mui/icons-material';
-
-
-import { DeleteOutline, EventNote, Schedule, LocationOn, AddCircle } from '@mui/icons-material';
-
+import { DeleteOutline, EventNote, Schedule, AddCircle, AccessTime, AttachMoney, Edit } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import PreviewEvent from './PreviewEvent';
 import './CreateYourEvent.css';
 
 export default function CreateYourEvent() {
-  const [eventData] = useState({
+  const [eventData, setEventData] = useState({
+    name: '',
+    description: '',
     isPublic: true,
     rsvpDeadline: '',
     maxParticipants: '',
@@ -35,124 +34,141 @@ export default function CreateYourEvent() {
     tagsString: ''
   });
 
-  const [activities, setActivities] = useState([
-    {
-      name: '',
-      description: '',
-      location: '',
-      link: '',
-      dateMode: 'single',
-      date: '',
-      time: '',
-      startDate: '',
-      endDate: '',
-      dateTimeSuggestions: [{ startDate: '', endDate: '', time: '' }],
-      allowSuggestions: false,
-      votingEnabled: false,
-      equipmentEnabled: false,
-      equipmentItems: '',
-      costMode: 'fixed',
-      cost: '',
-      minCost: '',
-      maxCost: '',
-      allowParticipantCostSuggestion: false
-    }
-  ]);
+  const [dateTimeData, setDateTimeData] = useState({
+    dateMode: 'single',
+    date: '',
+    time: '',
+    startDate: '',
+    endDate: '',
+    allowParticipantSelection: false,
+    requiredDayCount: ''
+  });
 
+  const [activities, setActivities] = useState([]);
+  const [activitySupports, setActivitySupports] = useState([]);
+  const [requiredActivityCount, setRequiredActivityCount] = useState('');
+  const [requiredSupportCount, setRequiredSupportCount] = useState('');
   const [showPreview, setShowPreview] = useState(false);
-  const [supports, setSupports] = useState([]);
-  const [choiceCount, setChoiceCount] = useState('');
 
-  const handleActivityChange = (index, field, value) => {
-    const updated = [...activities];
-    updated[index][field] = value;
-    setActivities(updated);
-  };
-
-  const toggleActivityFlag = (index, field) => {
-    const updated = [...activities];
-    updated[index][field] = !updated[index][field];
-    setActivities(updated);
-  };
-
-  const handleDateModeChange = (index, _, mode) => {
-    if (mode) {
-      const updated = [...activities];
-      updated[index].dateMode = mode;
-      setActivities(updated);
+  // Activity Support Categories - when one is selected, conflicting ones get disabled
+  const supportCategories = {
+    transportation: {
+      name: 'Transportation',
+      options: ['Airfare', 'Rental Car', 'Gas', 'Public Transit', 'Rideshare'],
+      conflicts: ['Airfare', 'Rental Car'] // These conflict with each other
+    },
+    accommodation: {
+      name: 'Accommodation', 
+      options: ['Hotel', 'Airbnb', 'Family/Friends', 'Camping'],
+      conflicts: ['Hotel', 'Airbnb', 'Family/Friends', 'Camping'] // All conflict
+    },
+    meals: {
+      name: 'Meals',
+      options: ['Restaurant', 'Catering', 'Potluck', 'Self-Prepared'],
+      conflicts: []
     }
   };
 
-  const handleSuggestionChange = (activityIndex, suggestionIndex, field, value) => {
-    const updated = [...activities];
-    updated[activityIndex].dateTimeSuggestions[suggestionIndex][field] = value;
-    setActivities(updated);
-  };
-
-  const handleSupportChange = (index, field, value) => {
-    const updated = [...supports];
-    updated[index][field] = value;
-    setSupports(updated);
-  };
-
-  const addSupport = () => {
-    setSupports(prev => [
+  const handleEventDataChange = (field, value) => {
+    setEventData(prev => ({
       ...prev,
-      { category: '', name: '', cost: '' }
-    ]);
+      [field]: value
+    }));
   };
 
-  const removeSupport = (index) => {
-    setSupports(prev => prev.filter((_, i) => i !== index));
+  const handleDateTimeChange = (field, value) => {
+    setDateTimeData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const addSuggestion = (activityIndex) => {
-    const updated = [...activities];
-    updated[activityIndex].dateTimeSuggestions.push({ startDate: '', endDate: '', time: '' });
-    setActivities(updated);
-  };
-
-  const removeSuggestion = (activityIndex, suggestionIndex) => {
-    const updated = [...activities];
-    updated[activityIndex].dateTimeSuggestions = updated[activityIndex].dateTimeSuggestions.filter((_, i) => i !== suggestionIndex);
-    setActivities(updated);
+  const handleDateModeChange = (_, mode) => {
+    if (mode) {
+      setDateTimeData(prev => ({
+        ...prev,
+        dateMode: mode,
+        allowParticipantSelection: false
+      }));
+    }
   };
 
   const addActivity = () => {
-    const firstActivity = activities[0];
     setActivities(prev => [
       ...prev,
       {
+        id: Date.now(),
         name: '',
-        description: '',
-        location: '',
+        timeCommitment: '',
         link: '',
-        dateMode: firstActivity.dateMode,
-        date: firstActivity.date,
-        time: firstActivity.time,
-        startDate: firstActivity.startDate,
-        endDate: firstActivity.endDate,
-        dateTimeSuggestions: [...firstActivity.dateTimeSuggestions],
-        allowSuggestions: false,
-        votingEnabled: true,
-        equipmentEnabled: false,
-        equipmentItems: '',
         costMode: 'fixed',
         cost: '',
         minCost: '',
         maxCost: '',
-        allowParticipantCostSuggestion: false
+        isVotable: false,
+        equipmentEnabled: false,
+        equipmentItems: '',
+        isCompleted: false
       }
     ]);
   };
 
-  const removeActivity = (index) => {
-    if (activities.length > 1) {
-      setActivities(prev => prev.filter((_, i) => i !== index));
-    }
+  const updateActivity = (id, field, value) => {
+    setActivities(prev => 
+      prev.map(activity => 
+        activity.id === id ? { ...activity, [field]: value } : activity
+      )
+    );
   };
 
-  const hasVotingEnabled = activities.some(activity => activity.votingEnabled);
+  const removeActivity = (id) => {
+    setActivities(prev => prev.filter(activity => activity.id !== id));
+  };
+
+  const addActivitySupport = (category, option) => {
+    const newSupport = {
+      id: Date.now(),
+      category,
+      option,
+      costMode: 'fixed',
+      cost: '',
+      minCost: '',
+      maxCost: '',
+      isVotable: false
+    };
+    setActivitySupports(prev => [...prev, newSupport]);
+  };
+
+  const updateActivitySupport = (id, field, value) => {
+    setActivitySupports(prev =>
+      prev.map(support =>
+        support.id === id ? { ...support, [field]: value } : support
+      )
+    );
+  };
+
+  const removeActivitySupport = (id) => {
+    setActivitySupports(prev => prev.filter(support => support.id !== id));
+  };
+
+  const getDisabledSupportOptions = () => {
+    const selected = activitySupports.map(s => s.option);
+    const disabled = new Set();
+    
+    selected.forEach(selectedOption => {
+      Object.values(supportCategories).forEach(category => {
+        if (category.conflicts.includes(selectedOption)) {
+          category.conflicts.forEach(conflictOption => {
+            if (conflictOption !== selectedOption) {
+              disabled.add(conflictOption);
+            }
+          });
+        }
+      });
+    });
+    
+    return disabled;
+  };
 
   const handlePreview = (e) => {
     e.preventDefault();
@@ -160,28 +176,13 @@ export default function CreateYourEvent() {
   };
 
   const handleConfirmAndSubmit = async () => {
-    const firstActivity = activities[0];
-    const allowDateSuggestions = firstActivity.dateMode === 'suggestions';
-    const allowTimeSuggestions = firstActivity.dateMode === 'suggestions';
-    
-    const formattedEventData = {
-      ...eventData,
-      name: firstActivity.name, // Use activity name as event name
-      description: firstActivity.description, // Use activity description as event description
-      location: eventData.location || firstActivity.location,
-      date: firstActivity.dateMode === 'single' ? firstActivity.date : '',
-      time: firstActivity.dateMode === 'single' ? firstActivity.time : '',
-      startDate: firstActivity.dateMode === 'range' ? firstActivity.startDate : '',
-      endDate: firstActivity.dateMode === 'range' ? firstActivity.endDate : '',
-      allowDateSuggestions,
-      allowTimeSuggestions
-    };
-
     const payload = {
-      ...formattedEventData,
-      activities: activities,
-      supports: supports,
-      choiceCount: choiceCount
+      eventData,
+      dateTimeData,
+      activities,
+      activitySupports,
+      requiredActivityCount,
+      requiredSupportCount
     };
 
     try {
@@ -199,31 +200,21 @@ export default function CreateYourEvent() {
   };
 
   if (showPreview) {
-    const firstActivity = activities[0];
-    const formattedEventData = {
-      ...eventData,
-      name: firstActivity.name, // Use activity name as event name
-      description: firstActivity.description, // Use activity description as event description
-      location: eventData.location || firstActivity.location,
-      date: firstActivity.dateMode === 'single' ? firstActivity.date : '',
-      time: firstActivity.dateMode === 'single' ? firstActivity.time : '',
-      startDate: firstActivity.dateMode === 'range' ? firstActivity.startDate : '',
-      endDate: firstActivity.dateMode === 'range' ? firstActivity.endDate : ''
-    };
-
     return (
       <PreviewEvent
-        eventData={formattedEventData}
-        dateMode={firstActivity.dateMode}
-        dateTimeSuggestions={firstActivity.dateMode === 'suggestions' ? firstActivity.dateTimeSuggestions : null}
+        eventData={eventData}
+        dateTimeData={dateTimeData}
         activities={activities}
-        supports={supports}
-        choiceCount={choiceCount}
+        activitySupports={activitySupports}
+        requiredActivityCount={requiredActivityCount}
+        requiredSupportCount={requiredSupportCount}
         onEdit={() => setShowPreview(false)}
         onConfirm={handleConfirmAndSubmit}
       />
     );
   }
+
+  const disabledSupportOptions = getDisabledSupportOptions();
 
   return (
     <Container maxWidth="md" className="single-event-container">
@@ -234,913 +225,556 @@ export default function CreateYourEvent() {
         <Typography variant="body1" color="text.secondary" className="single-event-subtitle">
           Plan meaningful adventures and create lasting memories.
           Perfect for one-time activities like dinners, meetings, or social gatherings.
-
         </Typography>
       </div>
 
       <Paper elevation={2} className="single-event-paper">
         <form>
-          {/* Craft Your Adventure */}
+          {/* Basic Event Information */}
           <Box className="craft-adventure">
+            <Typography variant="h4" className="section-title" sx={{ mb: 2 }}>
+              Event Details
+            </Typography>
             <Typography variant="h6" className="section-title" sx={{ mb: 2 }}>
-              Craft Your Adventure
+              Start by giving your event a name and description. From there you can build out your adventure.
             </Typography>
 
-            {/* Activities Section */}
-            <Box className="activities-header">
-              <Typography variant="subtitle1" className="section-title">
-                Activities
-              </Typography>
-              {hasVotingEnabled && (
-                <Button
-                  variant="outlined"
-                  startIcon={<AddCircle />}
-                  onClick={addActivity}
-                  size="small"
-                  className="add-activity-btn"
-                >
-                  Add Activity Option
-                </Button>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Event Name"
+                  value={eventData.name}
+                  onChange={e => handleEventDataChange('name', e.target.value)}
+                  required
+                  InputProps={{
+                    startAdornment: <EventNote />
+                  }}
+                  className="form-input form-input-with-icon"
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Event Description"
+                  multiline
+                  rows={3}
+                  value={eventData.description}
+                  onChange={e => handleEventDataChange('description', e.target.value)}
+                  className="form-input"
+                />
+              </Grid>
+
+              {/* Date & Time Selection */}
+              <Grid item xs={12}>
+                <Box className="date-selection-section">
+                  <Typography variant="subtitle1" gutterBottom className="date-selection-title">
+                    <Schedule />
+                    Date & Time Selection
+                  </Typography>
+
+                  <ToggleButtonGroup
+                    value={dateTimeData.dateMode}
+                    exclusive
+                    onChange={handleDateModeChange}
+                    size="small"
+                    className="date-mode-toggle"
+                  >
+                    <ToggleButton value="single">Set Date</ToggleButton>
+                    <ToggleButton value="range">Date Range</ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+              </Grid>
+
+              {/* Date/Time Fields based on mode */}
+              {dateTimeData.dateMode === 'single' && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Date"
+                      type="date"
+                      value={dateTimeData.date}
+                      onChange={e => handleDateTimeChange('date', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      className="form-input"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Time"
+                      type="time"
+                      value={dateTimeData.time}
+                      onChange={e => handleDateTimeChange('time', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      className="form-input"
+                    />
+                  </Grid>
+                </>
               )}
+
+              {dateTimeData.dateMode === 'range' && (
+                <>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Start Date"
+                      type="date"
+                      value={dateTimeData.startDate}
+                      onChange={e => handleDateTimeChange('startDate', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      className="form-input"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="End Date"
+                      type="date"
+                      value={dateTimeData.endDate}
+                      onChange={e => handleDateTimeChange('endDate', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      className="form-input"
+                    />
+                  </Grid>
+                  {/* <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Time"
+                      type="time"
+                      value={dateTimeData.time}
+                      onChange={e => handleDateTimeChange('time', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      className="form-input"
+                    />
+                  </Grid> */}
+                  <Grid item xs={12}>
+                    <FormControlLabel 
+                      control={
+                        <Switch 
+                          checked={dateTimeData.allowParticipantSelection} 
+                          onChange={(e) => handleDateTimeChange('allowParticipantSelection', e.target.checked)}
+                          className="activity-switch"
+                        />
+                      } 
+                      label="Ask participants to select a number of days within this range" 
+                    />
+                  </Grid>
+                  {dateTimeData.allowParticipantSelection && (
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="How many days must participants select?"
+                        type="number"
+                        value={dateTimeData.requiredDayCount}
+                        onChange={e => handleDateTimeChange('requiredDayCount', e.target.value)}
+                        InputProps={{ inputProps: { min: 1 } }}
+                        className="form-input"
+                        required
+                      />
+                    </Grid>
+                  )}
+                </>
+              )}
+            </Grid>
+          </Box>
+
+          <Divider sx={{ my: 4 }} />
+
+          {/* Activity Options Section */}
+          <Box>
+            <Box className="activities-header">
+              <Typography variant="h6" className="section-title">
+                Activity Options
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<AddCircle />}
+                onClick={addActivity}
+                size="small"
+                className="add-activity-btn"
+              >
+                Add Activity
+              </Button>
             </Box>
 
-            {activities.map((activity, activityIndex) => (
-              <Card key={activityIndex} className="activity-card">
-                <CardContent className="activity-card-content">
-                  {activities.length > 1 && (
-                    <Box className="activity-option-header">
-                      <Typography variant="subtitle1" className="activity-option-title">
-                        Option {activityIndex + 1}
-                      </Typography>
-                      <IconButton 
-                        color="error" 
-                        onClick={() => removeActivity(activityIndex)}
-                        size="small"
-                        className="delete-activity-btn"
-                      >
-                        <DeleteOutline />
-                      </IconButton>
-                    </Box>
-                  )}
-                  
-                  <Grid container spacing={3}>
-                    {/* Activity Basic Info */}
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        fullWidth
-                        label="Activity Name"
-                        value={activity.name}
-                        onChange={e => handleActivityChange(activityIndex, 'name', e.target.value)}
-                        required
-                        InputProps={{
-                          startAdornment: <EventNote />
-                        }}
-                        className="form-input form-input-with-icon"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Activity Description"
-                        multiline
-                        rows={3}
-                        value={activity.description}
-                        onChange={e => handleActivityChange(activityIndex, 'description', e.target.value)}
-                        className="form-input"
-                      />
-                    </Grid>
-
-                    {/* Date Selection Mode */}
-                    {(activityIndex === 0 || activity.dateMode !== activities[0].dateMode) && (
-                      <Grid item xs={12}>
-                        <Box className="date-selection-section">
-                          <Typography variant="subtitle1" gutterBottom className="date-selection-title">
-                            <Schedule />
-                            Date & Time Selection
-                          </Typography>
-                          <ToggleButtonGroup
-                            value={activity.dateMode}
-                            exclusive
-                            onChange={(event, mode) => handleDateModeChange(activityIndex, event, mode)}
-                            size="small"
-                            className="date-mode-toggle"
-                          >
-                            <ToggleButton value="single">Single Time</ToggleButton>
-                            <ToggleButton value="range">Date Range</ToggleButton>
-                            <ToggleButton value="suggestions">Let People Choose</ToggleButton>
-                          </ToggleButtonGroup>
-                        </Box>
-                      </Grid>
-                    )}
-
-                    {/* Date/Time Fields based on mode */}
-                    {activity.dateMode === 'single' && (
-                      <>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            label="Date"
-                            type="date"
-                            value={activity.date}
-                            onChange={e => handleActivityChange(activityIndex, 'date', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            className="form-input"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            label="Time"
-                            type="time"
-                            value={activity.time}
-                            onChange={e => handleActivityChange(activityIndex, 'time', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            className="form-input"
-                          />
-                        </Grid>
-                      </>
-                    )}
-
-                    {activity.dateMode === 'range' && (
-                      <>
-                        <Grid item xs={12} sm={4}>
-                          <TextField
-                            fullWidth
-                            label="Start Date"
-                            type="date"
-                            value={activity.startDate}
-                            onChange={e => handleActivityChange(activityIndex, 'startDate', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            className="form-input"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          <TextField
-                            fullWidth
-                            label="End Date"
-                            type="date"
-                            value={activity.endDate}
-                            onChange={e => handleActivityChange(activityIndex, 'endDate', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            className="form-input"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          <TextField
-                            fullWidth
-                            label="Time"
-                            type="time"
-                            value={activity.time}
-                            onChange={e => handleActivityChange(activityIndex, 'time', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            className="form-input"
-                          />
-                        </Grid>
-                      </>
-                    )}
-
-                    {activity.dateMode === 'suggestions' && (
-                      <Grid item xs={12}>
-                        <AnimatePresence>
-                          {activity.dateTimeSuggestions.map((s, suggestionIndex) => (
-                            <Card 
-                              key={suggestionIndex} 
-                              component={motion.div} 
-                              layout 
-                              initial={{ opacity: 0, y: -10 }} 
-                              animate={{ opacity: 1, y: 0 }} 
-                              exit={{ opacity: 0, y: -10 }} 
-                              className="suggestion-card"
-                            >
-                              <CardContent>
-                                <Grid container spacing={2} alignItems="center">
-                                  <Grid item xs={4}>
-                                    <TextField
-                                      fullWidth
-                                      label={`Start Date #${suggestionIndex + 1}`}
-                                      type="date"
-                                      value={s.startDate}
-                                      onChange={e => handleSuggestionChange(activityIndex, suggestionIndex, 'startDate', e.target.value)}
-                                      InputLabelProps={{ shrink: true }}
-                                      className="form-input"
-                                    />
-                                  </Grid>
-                                  <Grid item xs={4}>
-                                    <TextField
-                                      fullWidth
-                                      label={`End Date #${suggestionIndex + 1} (optional)`}
-                                      type="date"
-                                      value={s.endDate}
-                                      onChange={e => handleSuggestionChange(activityIndex, suggestionIndex, 'endDate', e.target.value)}
-                                      InputLabelProps={{ shrink: true }}
-                                      className="form-input"
-                                    />
-                                  </Grid>
-                                  <Grid item xs={3}>
-                                    <TextField
-                                      fullWidth
-                                      label="Time"
-                                      type="time"
-                                      value={s.time}
-                                      onChange={e => handleSuggestionChange(activityIndex, suggestionIndex, 'time', e.target.value)}
-                                      InputLabelProps={{ shrink: true }}
-                                      className="form-input"
-                                    />
-                                  </Grid>
-                                  <Grid item xs={1}>
-                                    <IconButton 
-                                      color="error" 
-                                      onClick={() => removeSuggestion(activityIndex, suggestionIndex)}
-                                      className="suggestion-delete-btn"
-                                    >
-                                      <DeleteOutline />
-                                    </IconButton>
-                                  </Grid>
-                                </Grid>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </AnimatePresence>
-                        <Button 
-                          variant="outlined" 
-                          onClick={() => addSuggestion(activityIndex)}
-                          className="add-suggestion-btn"
-                        >
-                          Add Time Option
-                        </Button>
-                      </Grid>
-                    )}
-
-                    {/* Activity Options */}
-                    <Grid item xs={12}>
-                      <Divider className="activity-options-divider" />
-                      <Typography variant="subtitle1" gutterBottom className="activity-options-title">
-                        Activity Options
-                      </Typography>
-                    </Grid>
-                    
-                    <Grid item xs={12} sm={4}>
-                      <FormControlLabel 
-                        control={
-                          <Switch 
-                            checked={activity.allowSuggestions} 
-                            onChange={() => toggleActivityFlag(activityIndex, 'allowSuggestions')}
-                            className="activity-switch"
-                          />
-                        } 
-                        label="Allow Suggestions" 
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <FormControlLabel 
-                        control={
-                          <Switch 
-                            checked={activity.votingEnabled} 
-                            onChange={() => toggleActivityFlag(activityIndex, 'votingEnabled')}
-                            className="activity-switch"
-                          />
-                        } 
-                        label="Enable Voting" 
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <FormControlLabel 
-                        control={
-                          <Switch 
-                            checked={activity.equipmentEnabled} 
-                            onChange={() => toggleActivityFlag(activityIndex, 'equipmentEnabled')}
-                            className="activity-switch"
-                          />
-                        } 
-                        label="Equipment/Items" 
-                      />
-                    </Grid>
-
-                    {activity.equipmentEnabled && (
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          multiline
-                          rows={2}
-                          label="Equipment/Items to Bring"
-                          value={activity.equipmentItems}
-                          onChange={e => handleActivityChange(activityIndex, 'equipmentItems', e.target.value)}
-                          className="form-input"
-                        />
-                      </Grid>
-                    )}
-
-                    {/* Cost Section */}
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle2" className="cost-section-title">
-                        Estimated Cost
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <ToggleButtonGroup 
-                        value={activity.costMode} 
-                        exclusive 
-                        onChange={(_, mode) => handleActivityChange(activityIndex, 'costMode', mode)} 
-                        size="small"
-                        className="cost-mode-toggle"
-                      >
-                        <ToggleButton value="fixed">Fixed Price</ToggleButton>
-                        <ToggleButton value="range">Price Range</ToggleButton>
-                      </ToggleButtonGroup>
-                    </Grid>
-
-                    {activity.costMode === 'fixed' && (
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Cost ($)"
-                          type="number"
-                          value={activity.cost}
-                          onChange={e => handleActivityChange(activityIndex, 'cost', e.target.value)}
-                          InputProps={{ inputProps: { min: 0 } }}
-                          className="form-input"
-                        />
-                      </Grid>
-                    )}
-
-                    {activity.costMode === 'range' && (
-                      <>
-                        <Grid item xs={6} sm={3}>
-                          <TextField
-                            fullWidth
-                            label="Min Cost ($)"
-                            type="number"
-                            value={activity.minCost}
-                            onChange={e => handleActivityChange(activityIndex, 'minCost', e.target.value)}
-                            InputProps={{ inputProps: { min: 0 } }}
-                            className="form-input"
-                          />
-                        </Grid>
-                        <Grid item xs={6} sm={3}>
-                          <TextField
-                            fullWidth
-                            label="Max Cost ($)"
-                            type="number"
-                            value={activity.maxCost}
-                            onChange={e => handleActivityChange(activityIndex, 'maxCost', e.target.value)}
-            {/* Activity Section */}
-            <Box>
-              <Box className="activities-header">
-                <Typography variant="h6" className="section-title">
-                  Activity {activities.length > 1 ? 'Options' : 'Information'}
-                </Typography>
-                {hasVotingEnabled && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<AddCircle />}
-                    onClick={addActivity}
-                    size="small"
-                    className="add-activity-btn"
+            {activities.length > 0 && (
+              <AnimatePresence>
+                {activities.map((activity) => (
+                  <Card 
+                    key={activity.id} 
+                    component={motion.div}
+                    layout
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="activity-card"
                   >
-                    Add Activity Option
-                  </Button>
-                )}
-              </Box>
+                    <CardContent className="activity-card-content" sx={{ position: 'relative', paddingBottom: '60px' }}>
+                      {activity.isCompleted ? (
+                        // Collapsed view for completed activities
+                        <Box>
+                          <Box className="activity-option-header">
+                            <Box>
+                              <Typography variant="subtitle1" className="activity-option-title">
+                                {activity.name || 'Unnamed Activity'}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {activity.timeCommitment && `Time: ${activity.timeCommitment}`}
+                                {activity.timeCommitment && (activity.cost || (activity.minCost && activity.maxCost)) && ' • '}
+                                {activity.costMode === 'fixed' && activity.cost && `Cost: ${activity.cost}`}
+                                {activity.costMode === 'range' && activity.minCost && activity.maxCost && `Cost: ${activity.minCost} - ${activity.maxCost}`}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <IconButton 
+                                onClick={() => updateActivity(activity.id, 'isCompleted', false)}
+                                size="small"
+                                sx={{ mr: 1 }}
+                              >
+                                <EventNote />
+                              </IconButton>
+                              <IconButton 
+                                color="error" 
+                                onClick={() => removeActivity(activity.id)}
+                                size="small"
+                                className="delete-activity-btn"
+                              >
+                                <DeleteOutline />
+                              </IconButton>
+                            </Box>
+                          </Box>
+                        </Box>
+                      ) : (
+                        // Full form view for incomplete activities
+                        <Box>
+                          <Box className="activity-option-header">
+                            <Typography variant="subtitle1" className="activity-option-title">
+                              Activity
+                            </Typography>
+                            <Box>
 
-              {activities.map((activity, activityIndex) => (
-                <Card key={activityIndex} className="activity-card">
-                  <CardContent className="activity-card-content">
-                    {activities.length > 1 && (
+                              <IconButton 
+                                color="error" 
+                                onClick={() => removeActivity(activity.id)}
+                                size="small"
+                                className="delete-activity-btn"
+                              >
+                                <DeleteOutline />
+                              </IconButton>
+                            </Box>
+                          </Box>
+                          
+                          <Grid container spacing={3}>
+                            <Grid item xs={12} sm={6}>
+                              <TextField
+                                fullWidth
+                                label="Activity Name"
+                                value={activity.name}
+                                onChange={e => updateActivity(activity.id, 'name', e.target.value)}
+                                required
+                                InputProps={{
+                                  startAdornment: <EventNote />
+                                }}
+                                className="form-input form-input-with-icon"
+                              />
+                            </Grid>
+
+                            <Grid item xs={12} sm={6}>
+                              <TextField
+                                fullWidth
+                                label="Estimated Time Commitment"
+                                value={activity.timeCommitment}
+                                onChange={e => updateActivity(activity.id, 'timeCommitment', e.target.value)}
+                                placeholder="e.g., 2 hours, Half day"
+                                InputProps={{
+                                  startAdornment: <AccessTime />
+                                }}
+                                className="form-input form-input-with-icon"
+                              />
+                            </Grid>
+
+                            <Grid item xs={12}>
+                              <TextField
+                                fullWidth
+                                label="Link (optional)"
+                                value={activity.link}
+                                onChange={e => updateActivity(activity.id, 'link', e.target.value)}
+                                className="form-input"
+                              />
+                            </Grid>
+
+                            <Grid item xs={12} sm={6}>
+                              <FormControlLabel 
+                                control={
+                                  <Switch 
+                                    checked={activity.isVotable} 
+                                    onChange={(e) => updateActivity(activity.id, 'isVotable', e.target.checked)}
+                                    className="activity-switch"
+                                  />
+                                } 
+                                label="Make this activity votable" 
+                              />
+                            </Grid>
+
+                            <Grid item xs={12} sm={6}>
+                              <FormControlLabel 
+                                control={
+                                  <Switch 
+                                    checked={activity.equipmentEnabled} 
+                                    onChange={(e) => updateActivity(activity.id, 'equipmentEnabled', e.target.checked)}
+                                    className="activity-switch"
+                                  />
+                                } 
+                                label="Equipment/Items needed" 
+                              />
+                            </Grid>
+
+                            {activity.equipmentEnabled && (
+                              <Grid item xs={12}>
+                                <TextField
+                                  fullWidth
+                                  multiline
+                                  rows={2}
+                                  label="Equipment/Items to Bring"
+                                  value={activity.equipmentItems}
+                                  onChange={e => updateActivity(activity.id, 'equipmentItems', e.target.value)}
+                                  className="form-input"
+                                />
+                              </Grid>
+                            )}
+
+                            {/* Cost Section */}
+                            <Grid item xs={12}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                <AttachMoney sx={{ mr: 1, color: 'text.secondary' }} />
+                                <Typography variant="subtitle2" className="cost-section-title">
+                                  Cost Information
+                                </Typography>
+                              </Box>
+                            </Grid>
+                            
+                            <Grid item xs={12} sm={6}>
+                              <ToggleButtonGroup 
+                                value={activity.costMode} 
+                                exclusive 
+                                onChange={(_, mode) => updateActivity(activity.id, 'costMode', mode)} 
+                                size="small"
+                                className="cost-mode-toggle"
+                              >
+                                <ToggleButton value="fixed">Fixed Price</ToggleButton>
+                                <ToggleButton value="range">Price Range</ToggleButton>
+                              </ToggleButtonGroup>
+                            </Grid>
+
+                            {activity.costMode === 'fixed' && (
+                              <Grid item xs={12} sm={6}>
+                                <TextField
+                                  fullWidth
+                                  label="Cost ($)"
+                                  type="number"
+                                  value={activity.cost}
+                                  onChange={e => updateActivity(activity.id, 'cost', e.target.value)}
+                                  InputProps={{ inputProps: { min: 0 } }}
+                                  className="form-input"
+                                />
+                              </Grid>
+                            )}
+
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => updateActivity(activity.id, 'isCompleted', true)}
+                                disabled={!activity.name}
+                                sx={{ mr: 1 }}
+                              >
+                                Complete
+                              </Button>
+
+                            {activity.costMode === 'range' && (
+                              <>
+                                <Grid item xs={6} sm={3}>
+                                  <TextField
+                                    fullWidth
+                                    label="Min Cost ($)"
+                                    type="number"
+                                    value={activity.minCost}
+                                    onChange={e => updateActivity(activity.id, 'minCost', e.target.value)}
+                                    InputProps={{ inputProps: { min: 0 } }}
+                                    className="form-input"
+                                  />
+                                </Grid>
+                                <Grid item xs={6} sm={3}>
+                                  <TextField
+                                    fullWidth
+                                    label="Max Cost ($)"
+                                    type="number"
+                                    value={activity.maxCost}
+                                    onChange={e => updateActivity(activity.id, 'maxCost', e.target.value)}
+                                    InputProps={{ inputProps: { min: 0 } }}
+                                    className="form-input"
+                                  />
+                                </Grid>
+                              </>
+                            )}
+                          </Grid>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </AnimatePresence>
+            )}
+
+            {/* Required Activity Selection */}
+            {activities.length > 1 && (
+              <Box sx={{ mt: 2 }}>
+                <TextField
+                  label="Participants must select how many activities? (leave blank if all are mandatory)"
+                  type="number"
+                  value={requiredActivityCount}
+                  onChange={e => setRequiredActivityCount(e.target.value)}
+                  InputProps={{ inputProps: { min: 1, max: activities.length } }}
+                  fullWidth
+                />
+              </Box>
+            )}
+          </Box>
+
+          <Divider sx={{ my: 4 }} />
+
+          {/* Activity Support Section */}
+          <Box>
+            <Typography variant="h6" className="section-title" sx={{ mb: 3 }}>
+              Activity Support
+            </Typography>
+
+            {Object.entries(supportCategories).map(([categoryKey, category]) => (
+              <Box key={categoryKey} sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" className="section-title" sx={{ mb: 2 }}>
+                  {category.name}
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {category.options.map((option) => (
+                    <Chip
+                      key={option}
+                      label={option}
+                      onClick={() => addActivitySupport(categoryKey, option)}
+                      disabled={disabledSupportOptions.has(option) || activitySupports.some(s => s.option === option)}
+                      clickable={!disabledSupportOptions.has(option) && !activitySupports.some(s => s.option === option)}
+                      color={activitySupports.some(s => s.option === option) ? "primary" : "default"}
+                      variant={activitySupports.some(s => s.option === option) ? "filled" : "outlined"}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            ))}
+
+            {/* Selected Activity Supports */}
+            {activitySupports.length > 0 && (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="subtitle1" className="section-title" sx={{ mb: 2 }}>
+                  Selected Support Options
+                </Typography>
+                {activitySupports.map((support) => (
+                  <Card key={support.id} className="activity-card" sx={{ mb: 2 }}>
+                    <CardContent>
                       <Box className="activity-option-header">
-                        <Typography variant="subtitle1" className="activity-option-title">
-                          Option {activityIndex + 1}
+                        <Typography variant="subtitle2">
+                          {support.option} ({supportCategories[support.category].name})
                         </Typography>
                         <IconButton 
                           color="error" 
-                          onClick={() => removeActivity(activityIndex)}
+                          onClick={() => removeActivitySupport(support.id)}
                           size="small"
-                          className="delete-activity-btn"
                         >
                           <DeleteOutline />
                         </IconButton>
                       </Box>
-                    )}
-                    
-                    <Grid container spacing={3}>
-                      {/* Activity Basic Info */}
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Activity Name"
-                          value={activity.name}
-                          onChange={e => handleActivityChange(activityIndex, 'name', e.target.value)}
-                          required
-                          InputProps={{
-                            startAdornment: <EventNote />
-                          }}
-                          className="form-input form-input-with-icon"
-                        />
-                      </Grid>
 
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Location"
-                          value={activity.location}
-                          onChange={e => handleActivityChange(activityIndex, 'location', e.target.value)}
-                          InputProps={{
-                            startAdornment: <LocationOn />
-                          }}
-                          className="form-input form-input-with-icon"
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Activity Description"
-                          multiline
-                          rows={3}
-                          value={activity.description}
-                          onChange={e => handleActivityChange(activityIndex, 'description', e.target.value)}
-                          className="form-input"
-                        />
-                      </Grid>
-
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Link (optional)"
-                          value={activity.link}
-                          onChange={e => handleActivityChange(activityIndex, 'link', e.target.value)}
-                          className="form-input"
-                        />
-                      </Grid>
-
-                      {/* Date Selection Mode */}
-                      {(activityIndex === 0 || activity.dateMode !== activities[0].dateMode) && (
-                        <Grid item xs={12}>
-                          <Box className="date-selection-section">
-                            <Typography variant="subtitle1" gutterBottom className="date-selection-title">
-                              <Schedule />
-                              Date & Time Selection
-                            </Typography>
-
-                            <ToggleButtonGroup
-                              value={activity.dateMode}
-                              exclusive
-                              onChange={(event, mode) => handleDateModeChange(activityIndex, event, mode)}
-                              size="small"
-                              className="date-mode-toggle"
-                            >
-                              <ToggleButton value="single">Single Time</ToggleButton>
-                              <ToggleButton value="range">Date Range</ToggleButton>
-                              <ToggleButton value="suggestions">Let People Choose</ToggleButton>
-                            </ToggleButtonGroup>
-                          </Box>
-                        </Grid>
-                      )}
-
-                      {/* Date/Time Fields based on mode */}
-                      {activity.dateMode === 'single' && (
-                        <>
-                          <Grid item xs={12} sm={6}>
-                            <TextField
-                              fullWidth
-                              label="Date"
-                              type="date"
-                              value={activity.date}
-                              onChange={e => handleActivityChange(activityIndex, 'date', e.target.value)}
-                              InputLabelProps={{ shrink: true }}
-                              className="form-input"
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <TextField
-                              fullWidth
-                              label="Time"
-                              type="time"
-                              value={activity.time}
-                              onChange={e => handleActivityChange(activityIndex, 'time', e.target.value)}
-                              InputLabelProps={{ shrink: true }}
-                              className="form-input"
-                            />
-                          </Grid>
-                        </>
-                      )}
-
-                      {activity.dateMode === 'range' && (
-                        <>
-                          <Grid item xs={12} sm={4}>
-                            <TextField
-                              fullWidth
-                              label="Start Date"
-                              type="date"
-                              value={activity.startDate}
-                              onChange={e => handleActivityChange(activityIndex, 'startDate', e.target.value)}
-                              InputLabelProps={{ shrink: true }}
-                              className="form-input"
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={4}>
-                            <TextField
-                              fullWidth
-                              label="End Date"
-                              type="date"
-                              value={activity.endDate}
-                              onChange={e => handleActivityChange(activityIndex, 'endDate', e.target.value)}
-                              InputLabelProps={{ shrink: true }}
-                              className="form-input"
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={4}>
-                            <TextField
-                              fullWidth
-                              label="Time"
-                              type="time"
-                              value={activity.time}
-                              onChange={e => handleActivityChange(activityIndex, 'time', e.target.value)}
-                              InputLabelProps={{ shrink: true }}
-                              className="form-input"
-                            />
-                          </Grid>
-                        </>
-                      )}
-
-                      {activity.dateMode === 'suggestions' && (
-                        <Grid item xs={12}>
-                          <AnimatePresence>
-                            {activity.dateTimeSuggestions.map((s, suggestionIndex) => (
-                              <Card 
-                                key={suggestionIndex} 
-                                component={motion.div} 
-                                layout 
-                                initial={{ opacity: 0, y: -10 }} 
-                                animate={{ opacity: 1, y: 0 }} 
-                                exit={{ opacity: 0, y: -10 }} 
-                                className="suggestion-card"
-                              >
-                                <CardContent>
-                                  <Grid container spacing={2} alignItems="center">
-                                    <Grid item xs={4}>
-                                      <TextField
-                                        fullWidth
-                                        label={`Start Date #${suggestionIndex + 1}`}
-                                        type="date"
-                                        value={s.startDate}
-                                        onChange={e => handleSuggestionChange(activityIndex, suggestionIndex, 'startDate', e.target.value)}
-                                        InputLabelProps={{ shrink: true }}
-                                        className="form-input"
-                                      />
-                                    </Grid>
-                                    <Grid item xs={4}>
-                                      <TextField
-                                        fullWidth
-                                        label={`End Date #${suggestionIndex + 1} (optional)`}
-                                        type="date"
-                                        value={s.endDate}
-                                        onChange={e => handleSuggestionChange(activityIndex, suggestionIndex, 'endDate', e.target.value)}
-                                        InputLabelProps={{ shrink: true }}
-                                        className="form-input"
-                                      />
-                                    </Grid>
-                                    <Grid item xs={3}>
-                                      <TextField
-                                        fullWidth
-                                        label="Time"
-                                        type="time"
-                                        value={s.time}
-                                        onChange={e => handleSuggestionChange(activityIndex, suggestionIndex, 'time', e.target.value)}
-                                        InputLabelProps={{ shrink: true }}
-                                        className="form-input"
-                                      />
-                                    </Grid>
-                                    <Grid item xs={1}>
-                                      <IconButton 
-                                        color="error" 
-                                        onClick={() => removeSuggestion(activityIndex, suggestionIndex)}
-                                        className="suggestion-delete-btn"
-                                      >
-                                        <DeleteOutline />
-                                      </IconButton>
-                                    </Grid>
-                                  </Grid>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </AnimatePresence>
-                          <Button 
-                            variant="outlined" 
-                            onClick={() => addSuggestion(activityIndex)}
-                            className="add-suggestion-btn"
+                      <Grid container spacing={2} sx={{ mt: 1 }}>
+                        <Grid item xs={12} sm={4}>
+                          <ToggleButtonGroup 
+                            value={support.costMode} 
+                            exclusive 
+                            onChange={(_, mode) => updateActivitySupport(support.id, 'costMode', mode)} 
+                            size="small"
                           >
-                            Add Time Option
-                          </Button>
+                            <ToggleButton value="fixed">Fixed</ToggleButton>
+                            <ToggleButton value="range">Range</ToggleButton>
+                          </ToggleButtonGroup>
                         </Grid>
-                      )}
 
-                      {/* Activity Options */}
-                      <Grid item xs={12}>
-                        <Divider className="activity-options-divider" />
-                        <Typography variant="subtitle1" gutterBottom className="activity-options-title">
-                          Activity Options
-                        </Typography>
-                      </Grid>
-                      
-                      <Grid item xs={12} sm={4}>
-                        <FormControlLabel 
-                          control={
-                            <Switch 
-                              checked={activity.allowSuggestions} 
-                              onChange={() => toggleActivityFlag(activityIndex, 'allowSuggestions')}
-                              className="activity-switch"
-                            />
-                          } 
-                          label="Allow Suggestions" 
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <FormControlLabel 
-                          control={
-                            <Switch 
-                              checked={activity.votingEnabled} 
-                              onChange={() => toggleActivityFlag(activityIndex, 'votingEnabled')}
-                              className="activity-switch"
-                            />
-                          } 
-                          label="Enable Voting" 
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <FormControlLabel 
-                          control={
-                            <Switch 
-                              checked={activity.equipmentEnabled} 
-                              onChange={() => toggleActivityFlag(activityIndex, 'equipmentEnabled')}
-                              className="activity-switch"
-                            />
-                          } 
-                          label="Equipment/Items" 
-                        />
-                      </Grid>
-
-                      {activity.equipmentEnabled && (
-                        <Grid item xs={12}>
-                          <TextField
-                            fullWidth
-                            multiline
-                            rows={2}
-                            label="Equipment/Items to Bring"
-                            value={activity.equipmentItems}
-                            onChange={e => handleActivityChange(activityIndex, 'equipmentItems', e.target.value)}
-                            className="form-input"
-                          />
-                        </Grid>
-                      )}
-
-                      {/* Cost Section */}
-                      <Grid item xs={12}>
-                        <Typography variant="subtitle2" className="cost-section-title">
-                          Estimated Cost
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <ToggleButtonGroup 
-                          value={activity.costMode} 
-                          exclusive 
-                          onChange={(_, mode) => handleActivityChange(activityIndex, 'costMode', mode)} 
-                          size="small"
-                          className="cost-mode-toggle"
-                        >
-                          <ToggleButton value="fixed">Fixed Price</ToggleButton>
-                          <ToggleButton value="range">Price Range</ToggleButton>
-                        </ToggleButtonGroup>
-                      </Grid>
-
-                      {activity.costMode === 'fixed' && (
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            label="Cost ($)"
-                            type="number"
-                            value={activity.cost}
-                            onChange={e => handleActivityChange(activityIndex, 'cost', e.target.value)}
-                            InputProps={{ inputProps: { min: 0 } }}
-                            className="form-input"
-                          />
-                        </Grid>
-                      </>
-                    )}
-
-                    <Grid item xs={12}>
-                      <FormControlLabel 
-                        control={
-                          <Switch 
-                            checked={activity.allowParticipantCostSuggestion} 
-                            onChange={() => toggleActivityFlag(activityIndex, 'allowParticipantCostSuggestion')}
-                            className="activity-switch"
-                          />
-                        } 
-                        label="Allow Participant Budget Suggestions" 
-                      />
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            ))}
-            
-            {hasVotingEnabled && activities.length === 1 && (
-              <Box className="voting-helper-text">
-                <Typography variant="body2" color="text.secondary">
-                  Enable voting to let participants choose between multiple activity options
-                </Typography>
-              </Box>
-            )}
-
-            {/* Participants must select X */}
-            {activities.length > 1 && (
-              <Box sx={{ my: 2 }}>
-                <TextField
-                  label="Participants must select"
-                  type="number"
-                  value={choiceCount}
-                  onChange={e => setChoiceCount(e.target.value)}
-                  InputProps={{ inputProps: { min: 1, max: activities.length } }}
-                />
-              </Box>
-            )}
-
-            {/* Activity Support Section */}
-            <Box sx={{ mt: 4 }}>
-              <Box className="activities-header">
-                <Typography variant="subtitle1" className="section-title">
-                  Activity Support
-                </Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<AddCircle />}
-                  onClick={addSupport}
-                  size="small"
-                  className="add-activity-btn"
-                >
-                  Add Support Option
-                </Button>
-              </Box>
-
-              {supports.map((s, i) => (
-                <Card key={i} className="activity-card">
-                  <CardContent className="activity-card-content">
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={4}>
-                        <TextField
-                          fullWidth
-                          label="Category"
-                          value={s.category}
-                          onChange={e => handleSupportChange(i, 'category', e.target.value)}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <TextField
-                          fullWidth
-                          label="Name"
-                          value={s.name}
-                          onChange={e => handleSupportChange(i, 'name', e.target.value)}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={3}>
-                        <TextField
-                          fullWidth
-                          label="Cost ($)"
-                          type="number"
-                          value={s.cost}
-                          onChange={e => handleSupportChange(i, 'cost', e.target.value)}
-                          InputProps={{ inputProps: { min: 0 } }}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={1}>
-                        <IconButton color="error" onClick={() => removeSupport(i)}>
-                          <DeleteOutline />
-                        </IconButton>
-                      </Grid>
-                      )}
-
-                      {activity.costMode === 'range' && (
-                        <>
-                          <Grid item xs={6} sm={3}>
+                        {support.costMode === 'fixed' && (
+                          <Grid item xs={12} sm={4}>
                             <TextField
                               fullWidth
-                              label="Min Cost ($)"
+                              label="Cost ($)"
                               type="number"
-                              value={activity.minCost}
-                              onChange={e => handleActivityChange(activityIndex, 'minCost', e.target.value)}
+                              value={support.cost}
+                              onChange={e => updateActivitySupport(support.id, 'cost', e.target.value)}
                               InputProps={{ inputProps: { min: 0 } }}
-                              className="form-input"
                             />
                           </Grid>
-                          <Grid item xs={6} sm={3}>
-                            <TextField
-                              fullWidth
-                              label="Max Cost ($)"
-                              type="number"
-                              value={activity.maxCost}
-                              onChange={e => handleActivityChange(activityIndex, 'maxCost', e.target.value)}
-                              InputProps={{ inputProps: { min: 0 } }}
-                              className="form-input"
-                            />
-                          </Grid>
-                        </>
-                      )}
+                        )}
 
-                      <Grid item xs={12}>
-                        <FormControlLabel 
-                          control={
-                            <Switch 
-                              checked={activity.allowParticipantCostSuggestion} 
-                              onChange={() => toggleActivityFlag(activityIndex, 'allowParticipantCostSuggestion')}
-                              className="activity-switch"
-                            />
-                          } 
-                          label="Allow Participant Budget Suggestions" 
-                        />
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              ))}
-           
-              {hasVotingEnabled && activities.length === 1 && (
-                <Box className="voting-helper-text">
-                  <Typography variant="body2" color="text.secondary">
-                    Enable voting to let participants choose between multiple activity options
-                  </Typography>
-                </Box>
-              )}
+                        {support.costMode === 'range' && (
+                          <>
+                            <Grid item xs={6} sm={2}>
+                              <TextField
+                                fullWidth
+                                label="Min ($)"
+                                type="number"
+                                value={support.minCost}
+                                onChange={e => updateActivitySupport(support.id, 'minCost', e.target.value)}
+                                InputProps={{ inputProps: { min: 0 } }}
+                              />
+                            </Grid>
+                            <Grid item xs={6} sm={2}>
+                              <TextField
+                                fullWidth
+                                label="Max ($)"
+                                type="number"
+                                value={support.maxCost}
+                                onChange={e => updateActivitySupport(support.id, 'maxCost', e.target.value)}
+                                InputProps={{ inputProps: { min: 0 } }}
+                              />
+                            </Grid>
+                          </>
+                        )}
 
-              {/* Participants must select X */}
-              {activities.length > 1 && (
-                <Box sx={{ my: 2 }}>
-                  <TextField
-                    label="Participants must select"
-                    type="number"
-                    value={choiceCount}
-                    onChange={e => setChoiceCount(e.target.value)}
-                    InputProps={{ inputProps: { min: 1, max: activities.length } }}
-                  />
-                </Box>
-              )}
-
-              {/* Activity Support Section */}
-              <Box sx={{ mt: 4 }}>
-                <Box className="activities-header">
-                  <Typography variant="subtitle1" className="section-title">
-                    Activity Support
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    startIcon={<AddCircle />}
-                    onClick={addSupport}
-                    size="small"
-                    className="add-activity-btn"
-                  >
-                    Add Support Option
-                  </Button>
-                </Box>
-
-                {supports.map((s, i) => (
-                  <Card key={i} className="activity-card">
-                    <CardContent className="activity-card-content">
-                      <Grid container spacing={2}>
                         <Grid item xs={12} sm={4}>
-                          <TextField
-                            fullWidth
-                            label="Category"
-                            value={s.category}
-                            onChange={e => handleSupportChange(i, 'category', e.target.value)}
+                          <FormControlLabel 
+                            control={
+                              <Switch 
+                                checked={support.isVotable} 
+                                onChange={(e) => updateActivitySupport(support.id, 'isVotable', e.target.checked)}
+                              />
+                            } 
+                            label="Votable option" 
                           />
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          <TextField
-                            fullWidth
-                            label="Name"
-                            value={s.name}
-                            onChange={e => handleSupportChange(i, 'name', e.target.value)}
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={3}>
-                          <TextField
-                            fullWidth
-                            label="Cost ($)"
-                            type="number"
-                            value={s.cost}
-                            onChange={e => handleSupportChange(i, 'cost', e.target.value)}
-                            InputProps={{ inputProps: { min: 0 } }}
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={1}>
-                          <IconButton color="error" onClick={() => removeSupport(i)}>
-                            <DeleteOutline />
-                          </IconButton>
                         </Grid>
                       </Grid>
                     </CardContent>
                   </Card>
                 ))}
+
+                {/* Required Support Selection */}
+                {activitySupports.length > 1 && (
+                  <TextField
+                    label="Participants must select how many support options? (leave blank if all are mandatory)"
+                    type="number"
+                    value={requiredSupportCount}
+                    onChange={e => setRequiredSupportCount(e.target.value)}
+                    InputProps={{ inputProps: { min: 1, max: activitySupports.length } }}
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  />
+                )}
               </Box>
-            </Box>
+            )}
           </Box>
 
           {/* Preview Button */}

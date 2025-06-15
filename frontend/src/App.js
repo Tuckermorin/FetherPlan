@@ -474,7 +474,7 @@ const BackButton = () => (
                       mb: 3,
                     }}
                   >
-                    Ready to Get Started?
+                    No More Massive Text or Email Threads...
                   </Typography>
                   <Typography
                     variant="h6"
@@ -485,7 +485,8 @@ const BackButton = () => (
                       fontWeight: 400,
                     }}
                   >
-                    Join thousands of organizers who trust Fether to bring their events to life.
+                    If you've tried coordinating events through endless emails, group chats, or complex spreadsheets,
+                    Fether is here to change that. Our platform is designed to streamline the entire process, making it easy.
                   </Typography>
                   <Button
                     variant="contained"

@@ -8,32 +8,32 @@
   margin-bottom: 2rem;
 }
 
-.single-event-title {
-  font-weight: 600 !important;
-  color: #1f2937 !important;
+.single-event-container .single-event-title {
+  font-weight: 600;
+  color: #1f2937;
 }
 
-.single-event-subtitle {
-  margin-bottom: 2rem !important;
+.single-event-container .single-event-subtitle {
+  margin-bottom: 2rem;
 }
 
-.single-event-paper {
-  padding: 2rem !important;
-  border-radius: 1.5rem !important;
-  border: 1px solid #e5e7eb !important;
+.single-event-container .single-event-paper {
+  padding: 2rem;
+  border-radius: 1.5rem;
+  border: 1px solid #e5e7eb;
 }
 
 .event-details-section {
   margin-bottom: 2rem;
 }
 
-.section-title {
-  font-weight: 600 !important;
-  color: #374151 !important;
+.event-details-section .section-title {
+  font-weight: 600;
+  color: #374151;
 }
 
-.section-divider {
-  margin: 2rem 0 !important;
+.event-details-section .section-divider {
+  margin: 2rem 0;
 }
 
 /* Activity Section */
@@ -44,23 +44,23 @@
   margin-bottom: 1.5rem;
 }
 
-.add-activity-btn {
-  border-radius: 0.5rem !important;
-  border-color: #6366f1 !important;
-  color: #6366f1 !important;
+.activities-header .add-activity-btn {
+  border-radius: 0.5rem;
+  border-color: #6366f1;
+  color: #6366f1;
 }
 
-.add-activity-btn:hover {
-  border-color: #4f46e5 !important;
-  background-color: rgba(99, 102, 241, 0.04) !important;
+.activities-header .add-activity-btn:hover {
+  border-color: #4f46e5;
+  background-color: rgba(99, 102, 241, 0.04);
 }
 
 /* Activity Cards */
 .activity-card {
-  border-radius: 1.5rem !important;
-  border: 2px solid #e5e7eb !important;
-  background-color: #fafafb !important;
-  box-shadow: none !important;
+  border-radius: 1.5rem;
+  border: 2px solid #e5e7eb;
+  background-color: #fafafb;
+  box-shadow: none;
   margin-bottom: 1.5rem;
 }
 
@@ -68,33 +68,48 @@
   margin-bottom: 0;
 }
 
-.activity-card-content {
-  padding: 2rem !important;
+.activity-card .activity-card-content {
+  padding: 2rem;
 }
 
-.activity-option-header {
+/* Completed Activity Cards - Smaller styling */
+.activity-card.completed {
+  background-color: #f0f9ff;
+  border-color: #0ea5e9;
+  padding: 1rem;
+}
+
+.activity-card.completed .activity-card-content {
+  padding: 1rem;
+}
+
+.activity-card .activity-option-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
 }
 
-.activity-option-title {
-  font-weight: 600 !important;
-  color: #374151 !important;
+.activity-card .activity-option-header.completed {
+  margin-bottom: 0;
 }
 
-.delete-activity-btn:hover {
-  background-color: rgba(239, 68, 68, 0.1) !important;
+.activity-card .activity-option-title {
+  font-weight: 600;
+  color: #374151;
+}
+
+.activity-card .delete-activity-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
 }
 
 /* Form Fields */
-.form-input .MuiOutlinedInput-root {
-  border-radius: 0.5rem !important;
+.activity-card .form-input .MuiOutlinedInput-root {
+  border-radius: 0.5rem;
 }
 
-.form-input-with-icon .MuiInputAdornment-root .MuiSvgIcon-root {
-  color: #6366f1 !important;
+.activity-card .form-input-with-icon .MuiInputAdornment-root .MuiSvgIcon-root {
+  color: #6366f1;
   margin-right: 0.5rem;
 }
 
@@ -104,97 +119,104 @@
   margin-bottom: 1.5rem;
 }
 
-.date-selection-title {
-  font-weight: 600 !important;
-  color: #374151 !important;
-  margin-bottom: 1rem !important;
+.date-selection-section .date-selection-title {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
 }
 
-.date-selection-title .MuiSvgIcon-root {
+.date-selection-section .date-selection-title .MuiSvgIcon-root {
   margin-right: 0.5rem;
   vertical-align: middle;
-  color: #6366f1 !important;
+  color: #6366f1;
 }
 
-.date-mode-toggle .MuiToggleButton-root {
-  border-radius: 0.5rem !important;
-  padding: 0.75rem 1.5rem !important;
+.date-selection-section .date-mode-toggle .MuiToggleButton-root {
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
 }
 
-.date-mode-toggle .MuiToggleButton-root.Mui-selected {
-  background-color: #6366f1 !important;
-  color: white !important;
+.date-selection-section .date-mode-toggle .MuiToggleButton-root.Mui-selected {
+  background-color: #6366f1;
+  color: white;
 }
 
-.date-mode-toggle .MuiToggleButton-root.Mui-selected:hover {
-  background-color: #4f46e5 !important;
+.date-selection-section .date-mode-toggle .MuiToggleButton-root.Mui-selected:hover {
+  background-color: #4f46e5;
 }
 
 /* Date Suggestions */
-.suggestion-card {
-  margin-bottom: 1rem !important;
-  border-radius: 0.5rem !important;
-  border: 1px solid #d1d5db !important;
+.date-selection-section .suggestion-card {
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
 }
 
-.suggestion-card .MuiOutlinedInput-root {
-  border-radius: 0.5rem !important;
+.date-selection-section .suggestion-card .MuiOutlinedInput-root {
+  border-radius: 0.5rem;
 }
 
-.suggestion-delete-btn:hover {
-  background-color: rgba(239, 68, 68, 0.1) !important;
+.date-selection-section .suggestion-delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
 }
 
-.add-suggestion-btn {
-  border-radius: 0.5rem !important;
-  border-color: #6366f1 !important;
-  color: #6366f1 !important;
+.date-selection-section .add-suggestion-btn {
+  border-radius: 0.5rem;
+  border-color: #6366f1;
+  color: #6366f1;
   margin-top: 1rem;
 }
 
-.add-suggestion-btn:hover {
-  border-color: #4f46e5 !important;
-  background-color: rgba(99, 102, 241, 0.04) !important;
+.date-selection-section .add-suggestion-btn:hover {
+  border-color: #4f46e5;
+  background-color: rgba(99, 102, 241, 0.04);
 }
 
 /* Activity Options */
-.activity-options-divider {
-  margin: 1rem 0 !important;
+.activity-card .activity-options-divider {
+  margin: 1rem 0;
 }
 
-.activity-options-title {
-  font-weight: 600 !important;
-  color: #374151 !important;
-  margin-bottom: 1rem !important;
+.activity-card .activity-options-title {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
 }
 
-.activity-switch .MuiSwitch-switchBase.Mui-checked {
-  color: #6366f1 !important;
+.activity-card .activity-switch .MuiSwitch-switchBase.Mui-checked {
+  color: #6366f1;
 }
 
-.activity-switch .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track {
-  background-color: #6366f1 !important;
+.activity-card .activity-switch .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track {
+  background-color: #6366f1;
 }
 
 /* Cost Section */
-.cost-section-title {
-  font-weight: 600 !important;
-  color: #374151 !important;
-  margin-bottom: 1rem !important;
+.activity-card .cost-section-title {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
 }
 
-.cost-mode-toggle .MuiToggleButton-root {
-  border-radius: 0.5rem !important;
-  padding: 0.5rem 1.5rem !important;
+.activity-card .cost-section-title .MuiSvgIcon-root {
+  margin-right: 0.5rem;
+  color: #6366f1;
 }
 
-.cost-mode-toggle .MuiToggleButton-root.Mui-selected {
-  background-color: #6366f1 !important;
-  color: white !important;
+.activity-card .cost-mode-toggle .MuiToggleButton-root {
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.5rem;
 }
 
-.cost-mode-toggle .MuiToggleButton-root.Mui-selected:hover {
-  background-color: #4f46e5 !important;
+.activity-card .cost-mode-toggle .MuiToggleButton-root.Mui-selected {
+  background-color: #6366f1;
+  color: white;
+}
+
+.activity-card .cost-mode-toggle .MuiToggleButton-root.Mui-selected:hover {
+  background-color: #4f46e5;
 }
 
 /* Preview Button */
@@ -203,18 +225,18 @@
   text-align: center;
 }
 
-.preview-button {
-  padding: 1rem 3rem !important;
-  font-size: 1.1rem !important;
-  border-radius: 0.5rem !important;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-  transition: all 0.2s ease-in-out !important;
+.preview-button-container .preview-button {
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  transition: all 0.2s ease-in-out;
 }
 
-.preview-button:hover {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3) !important;
+.preview-button-container .preview-button:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
 }
 
 /* Helper Text */
@@ -224,10 +246,114 @@
 }
 
 .voting-helper-text .MuiTypography-root {
-  margin-bottom: 1rem !important;
+  margin-bottom: 1rem;
 }
 
 /* Craft Your Adventure */
 .craft-adventure {
   margin-top: 2rem;
+}
+
+/* Calendar Styles */
+.calendar-container {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.calendar-container .calendar-day {
+  min-width: 0;
+  width: 100%;
+  height: 40px;
+  font-size: 0.75rem;
+}
+
+.calendar-container .calendar-day.available:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+}
+
+.calendar-container .calendar-day.selected {
+  background-color: #6366f1;
+  color: white;
+}
+
+.calendar-container .calendar-day.disabled {
+  color: #bbb;
+  cursor: not-allowed;
+}
+
+/* Completed Activity Styling */
+.completed-activities-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.completed-activities-section {
+  margin-top: 2rem;
+}
+
+.completed-activities-title {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.completed-activity-card {
+  width: 220px;
+  min-height: 160px;
+  border: 2px solid #d1d5db;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.completed-activity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.completed-activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.completed-activity-detail {
+  font-size: 0.875rem;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.completed-activity-detail:last-child {
+  margin-bottom: 0;
+}
+
+.completed-activity-card .MuiIconButton-root {
+  padding: 0.25rem;
+  color: #6b7280;
+  font-size: 1rem;
+  min-width: auto;
+  width: 28px;
+  height: 28px;
+}
+
+.completed-activity-card .MuiIconButton-root:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+h6 {
+  font-weight: bold !important;
+  color: #374151;
 }
