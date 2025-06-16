@@ -223,8 +223,7 @@ export default function CreateYourEvent() {
           Create Your Event
         </Typography>
         <Typography variant="body1" color="text.secondary" className="single-event-subtitle">
-          Plan meaningful adventures and create lasting memories.
-          Perfect for one-time activities like dinners, meetings, or social gatherings.
+          Plan meaningful adventures and create lasting memories. It can be as simple as a dinner date with friends or a multi-day vacation with multiple activities.
         </Typography>
       </div>
 

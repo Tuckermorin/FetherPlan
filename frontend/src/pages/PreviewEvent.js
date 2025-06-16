@@ -324,9 +324,13 @@ const PreviewEvent = ({
         Event Preview - Participant View
       </Typography>
 
+      <Typography variant="h6" align="center" gutterBottom>
+        This is the view your participants will see. Feel free to click around and "explore" as someone who was sent this link.
+      </Typography>
+
       <Paper elevation={3} style={{ padding: '2rem', marginBottom: '2rem' }}>
         {/* Event Basic Info */}
-        <Typography variant="h5" gutterBottom>
+        <Typography variant="h2" gutterBottom>
           {eventData.name || 'Unnamed Event'}
         </Typography>
 
