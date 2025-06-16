@@ -489,7 +489,7 @@ const BackButton = () => (
                       fontWeight: 400,
                     }}
                   >
-                    If you've tried coordinating events through endless emails, group chats, or complex spreadsheets,
+                    Are you on your fifth attempt to plan that girls trip? That family reunion? That couples dinner date?
                     Fether is here to change that. Our platform is designed to streamline the entire process, making it easy.
                   </Typography>
                   <Button
