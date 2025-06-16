@@ -232,14 +232,14 @@ export default function CreateYourEvent() {
         <form>
           {/* Basic Event Information */}
           <Box className="craft-adventure">
-            <Typography variant="h4" className="section-title" sx={{ mb: 2 }}>
+            {/* <Typography variant="h4" className="section-title" sx={{ mb: 2 }}>
               Event Details
-            </Typography>
-            <Typography variant="h6" className="section-title" sx={{ mb: 2 }}>
-              Start by giving your event a name and description. From there you can build out your adventure.
-            </Typography>
-
-            <Grid container spacing={3}>
+            </Typography> */}
+            <Grid 
+              container 
+              columnSpacing={3}
+              rowSpacing={0} 
+            >
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -254,7 +254,7 @@ export default function CreateYourEvent() {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid item xs={12} mt={2}>
                 <TextField
                   fullWidth
                   label="Event Description"
@@ -267,7 +267,7 @@ export default function CreateYourEvent() {
               </Grid>
 
               {/* Date & Time Selection */}
-              <Grid item xs={12}>
+              <Grid item xs={12} mt ={2.5}>
                 <Box className="date-selection-section">
                   <Typography variant="subtitle1" gutterBottom className="date-selection-title">
                     <Schedule />
@@ -455,7 +455,11 @@ export default function CreateYourEvent() {
                             </Box>
                           </Box>
                           
-                          <Grid container spacing={3}>
+                          <Grid 
+                            container 
+                            columnSpacing={3}
+                            rowSpacing={0} 
+                          >
                             <Grid item xs={12} sm={6}>
                               <TextField
                                 fullWidth
@@ -490,7 +494,7 @@ export default function CreateYourEvent() {
                                 label="Link (optional)"
                                 value={activity.link}
                                 onChange={e => updateActivity(activity.id, 'link', e.target.value)}
-                                className="form-input"
+                                className="linkField"
                               />
                             </Grid>
 
@@ -536,7 +540,7 @@ export default function CreateYourEvent() {
 
                             {/* Cost Section */}
                             <Grid item xs={12}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, mt: 5 }}>
                                 <AttachMoney sx={{ mr: 1, color: 'text.secondary' }} />
                                 <Typography variant="subtitle2" className="cost-section-title">
                                   Cost Information
@@ -565,13 +569,13 @@ export default function CreateYourEvent() {
                                   type="number"
                                   value={activity.cost}
                                   onChange={e => updateActivity(activity.id, 'cost', e.target.value)}
-                                  InputProps={{ inputProps: { min: 0 } }}
+                                  InputProps={{ inputProps: `{$}{ min: 0 }` }}
                                   className="form-input"
                                 />
                               </Grid>
                             )}
 
-                              <Button
+                              <Button 
                                 variant="outlined"
                                 size="small"
                                 onClick={() => updateActivity(activity.id, 'isCompleted', true)}
