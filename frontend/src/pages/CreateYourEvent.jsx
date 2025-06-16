@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Container,
   TextField,
+  Tooltip,
   Button,
   Typography,
   Paper,
@@ -18,7 +19,7 @@ import {
   Chip
 } from '@mui/material';
 
-import { DeleteOutline, EventNote, Schedule, AddCircle, AccessTime, AttachMoney, Edit } from '@mui/icons-material';
+import { DeleteOutline, EventNote, Schedule, AddCircle, AccessTime, AttachMoney, Edit, InfoOutlined } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import PreviewEvent from './PreviewEvent';
 import './CreateYourEvent.css';
@@ -151,24 +152,6 @@ export default function CreateYourEvent() {
     setActivitySupports(prev => prev.filter(support => support.id !== id));
   };
 
-  const getDisabledSupportOptions = () => {
-    const selected = activitySupports.map(s => s.option);
-    const disabled = new Set();
-    
-    selected.forEach(selectedOption => {
-      Object.values(supportCategories).forEach(category => {
-        if (category.conflicts.includes(selectedOption)) {
-          category.conflicts.forEach(conflictOption => {
-            if (conflictOption !== selectedOption) {
-              disabled.add(conflictOption);
-            }
-          });
-        }
-      });
-    });
-    
-    return disabled;
-  };
 
   const handlePreview = (e) => {
     e.preventDefault();
@@ -214,7 +197,6 @@ export default function CreateYourEvent() {
     );
   }
 
-  const disabledSupportOptions = getDisabledSupportOptions();
 
   return (
     <Container maxWidth="md" className="single-event-container">
@@ -427,9 +409,13 @@ export default function CreateYourEvent() {
                           <Typography className="completed-activity-detail">
                             Estimated Time: {activity.timeCommitment}
                           </Typography>
-                          <Typography className="completed-activity-detail">
-                            Vote For Activity: {activity.isVotable ? 'Yes' : 'No'}
-                          </Typography>
+                          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                            <Chip
+                              label={activity.isVotable ? 'Voting' : 'Fixed'}
+                              size="small"
+                              color={activity.isVotable ? 'primary' : 'default'}
+                            />
+                          </Box>
                           <Typography className="completed-activity-detail" sx={{ mt: 0.5 }}>
                             Cost: ${activity.cost}
                           </Typography>
@@ -441,6 +427,12 @@ export default function CreateYourEvent() {
                             <Typography variant="subtitle1" className="activity-option-title">
                               Activity
                             </Typography>
+                            <Chip
+                              label={activity.isVotable ? 'Voting' : 'Fixed'}
+                              size="small"
+                              color={activity.isVotable ? 'primary' : 'default'}
+                              sx={{ ml: 1 }}
+                            />
                             <Box>
 
                               <IconButton 
@@ -619,27 +611,17 @@ export default function CreateYourEvent() {
               </AnimatePresence>
             )}
 
-            {/* Required Activity Selection */}
-            {activities.length > 1 && (
-              <Box sx={{ mt: 2 }}>
-                <TextField
-                  label="Participants must select how many activities? (leave blank if all are mandatory)"
-                  type="number"
-                  value={requiredActivityCount}
-                  onChange={e => setRequiredActivityCount(e.target.value)}
-                  InputProps={{ inputProps: { min: 1, max: activities.length } }}
-                  fullWidth
-                />
-              </Box>
-            )}
           </Box>
 
           <Divider sx={{ my: 4 }} />
 
           {/* Activity Support Section */}
           <Box>
-            <Typography variant="h6" className="section-title" sx={{ mb: 3 }}>
+            <Typography variant="h6" className="section-title" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
               Activity Support
+              <Tooltip title="Pick the items that may be required to make your activity happen or select the options for your friends and family to vote on.">
+                <InfoOutlined fontSize="small" />
+              </Tooltip>
             </Typography>
 
             {Object.entries(supportCategories).map(([categoryKey, category]) => (
@@ -653,8 +635,6 @@ export default function CreateYourEvent() {
                       key={option}
                       label={option}
                       onClick={() => addActivitySupport(categoryKey, option)}
-                      disabled={disabledSupportOptions.has(option) || activitySupports.some(s => s.option === option)}
-                      clickable={!disabledSupportOptions.has(option) && !activitySupports.some(s => s.option === option)}
                       color={activitySupports.some(s => s.option === option) ? "primary" : "default"}
                       variant={activitySupports.some(s => s.option === option) ? "filled" : "outlined"}
                     />
@@ -676,8 +656,14 @@ export default function CreateYourEvent() {
                         <Typography variant="subtitle2">
                           {support.option} ({supportCategories[support.category].name})
                         </Typography>
-                        <IconButton 
-                          color="error" 
+                        <Chip
+                          label={support.isVotable ? 'Voting' : 'Fixed'}
+                          size="small"
+                          color={support.isVotable ? 'primary' : 'default'}
+                          sx={{ ml: 1 }}
+                        />
+                        <IconButton
+                          color="error"
                           onClick={() => removeActivitySupport(support.id)}
                           size="small"
                         >
@@ -752,18 +738,6 @@ export default function CreateYourEvent() {
                   </Card>
                 ))}
 
-                {/* Required Support Selection */}
-                {activitySupports.length > 1 && (
-                  <TextField
-                    label="Participants must select how many support options? (leave blank if all are mandatory)"
-                    type="number"
-                    value={requiredSupportCount}
-                    onChange={e => setRequiredSupportCount(e.target.value)}
-                    InputProps={{ inputProps: { min: 1, max: activitySupports.length } }}
-                    fullWidth
-                    sx={{ mt: 2 }}
-                  />
-                )}
               </Box>
             )}
           </Box>
