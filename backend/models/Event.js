@@ -12,7 +12,11 @@ const activitySchema = new mongoose.Schema({
   cost: Number,
   minCost: Number,
   maxCost: Number,
-  allowParticipantCostSuggestion: Boolean
+  allowParticipantCostSuggestion: Boolean,
+    votes: [{
+      userId: String,
+      vote: Boolean
+  }]
 });
 
 const suggestionSchema = new mongoose.Schema({
