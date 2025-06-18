@@ -154,6 +154,12 @@
   }
 }
 
+@media (max-width: 600px) {
+  .progress-tracker {
+    display: none;
+  }
+}
+
 /* Animation for step completion */
 .step-icon.complete {
   animation: checkmark 0.3s ease-in-out;

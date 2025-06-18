@@ -12,10 +12,13 @@ import {
   Container,
   Paper,
   Fade,
-  Chip
+  Chip,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import CreateYourEvent from './pages/CreateYourEvent';
 import EventProgressTracker from './components/EventProgressTracker';
+import MobileProgressTracker from './components/MobileProgressTracker';
 import { ArrowBack } from '@mui/icons-material';
 
 
@@ -123,6 +126,7 @@ const theme = createTheme({
 
 export default function App() {
   const [page, setPage] = useState('landing');
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
 const BackButton = () => (
     <Button
@@ -621,13 +625,14 @@ const BackButton = () => (
 
         {page === 'create' && (
           <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#fafafb', pt: 8 }}>
-            <EventProgressTracker activities={[]} />
-            <Box sx={{ flexGrow: 1, pt: 2, overflow: 'auto', ml: '280px' }}>
+            {!isMobile && <EventProgressTracker activities={[]} />}
+            <Box sx={{ flexGrow: 1, pt: 2, overflow: 'auto', ml: isMobile ? 0 : '280px', pb: isMobile ? '60px' : 0 }}>
               <Container maxWidth="md" sx={{ py: 4 }}>
                 <BackButton />
                 <CreateYourEvent />
               </Container>
             </Box>
+            {isMobile && <MobileProgressTracker activities={[]} />}
           </Box>
         )}
 
