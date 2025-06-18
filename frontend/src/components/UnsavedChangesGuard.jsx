@@ -2,26 +2,37 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
 
 export default function UnsavedChangesGuard({ isDirty, children }) {
-  const [pendingPath, setPendingPath] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
 
   const handleClose = () => setPendingAction(null);
 
-  const attemptNavigate = (path) => {
+  const attemptNavigate = (action) => {
     if (!isDirty) {
-      window.location.href = path;
+      if (typeof action === 'function') {
+        action();
+      } else if (typeof action === 'string') {
+        window.location.href = action;
+      }
       return;
     }
-    setPendingAction(() => action);
+    if (typeof action === 'function') {
+      setPendingAction(() => action);
+    } else if (typeof action === 'string') {
+      setPendingAction(() => () => {
+        window.location.href = action;
+      });
+    }
   };
 
   const confirmLeave = () => {
-    if (pendingPath) {
-      window.location.href = pendingPath;
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
     }
   };
 
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = (e) => {
       if (isDirty) {
         e.preventDefault();
         e.returnValue = '';
