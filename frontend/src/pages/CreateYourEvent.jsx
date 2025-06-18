@@ -14,6 +14,7 @@ import EventDetailsSection from '../components/EventDetailsSection';
 import ActivityOptionsSection from '../components/ActivityOptionsSection';
 import ActivitySupportSection from '../components/ActivitySupportSection';
 import UnsavedChangesGuard from '../components/UnsavedChangesGuard';
+import { ArrowBack } from '@mui/icons-material';
 import './CreateYourEvent.css';
 
 const initialEventData = {
@@ -36,7 +37,7 @@ const initialDateTimeData = {
   requiredDayCount: ''
 };
 
-export default function CreateYourEvent() {
+export default function CreateYourEvent({ onBack }) {
   const [eventData, setEventData] = useState({ ...initialEventData });
 
   const [dateTimeData, setDateTimeData] = useState({ ...initialDateTimeData });
@@ -225,6 +226,20 @@ export default function CreateYourEvent() {
       {({ attemptNavigate }) => (
         <>
     <Container maxWidth="md" className="single-event-container">
+      <Button
+        variant="text"
+        onClick={() => attemptNavigate(onBack)}
+        sx={{
+          mb: 3,
+          color: '#6366f1',
+          '&:hover': { backgroundColor: 'rgba(99, 102, 241, 0.04)' },
+          px: 1,
+          py: 4,
+        }}
+        startIcon={<ArrowBack />}
+      >
+        Back to previous page
+      </Button>
       <div className="single-event-header">
         <Typography variant="h4" gutterBottom className="single-event-title">
           Create Your Event
