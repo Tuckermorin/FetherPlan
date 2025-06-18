@@ -19,8 +19,6 @@ import {
 import CreateYourEvent from './pages/CreateYourEvent';
 import EventProgressTracker from './components/EventProgressTracker';
 import MobileProgressTracker from './components/MobileProgressTracker';
-import { ArrowBack } from '@mui/icons-material';
-
 
 const theme = createTheme({
   palette: {
@@ -127,25 +125,6 @@ const theme = createTheme({
 export default function App() {
   const [page, setPage] = useState('landing');
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-const BackButton = () => (
-    <Button
-      variant="text"
-      onClick={() => setPage('landing')}
-      sx={{
-        mb: 3,
-        color: '#6366f1',
-        '&:hover': {
-          backgroundColor: 'rgba(99, 102, 241, 0.04)',
-        },
-        px: 1,
-        py: 4,
-      }}
-      startIcon={<ArrowBack />}
-    >
-      Back to previous page
-    </Button>
-  );
 
   return (
     <ThemeProvider theme={theme}>
