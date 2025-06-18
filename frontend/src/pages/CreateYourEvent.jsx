@@ -5,7 +5,9 @@ import {
   Typography,
   Paper,
   Box,
-  Divider
+  Divider,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import PreviewEvent from './PreviewEvent';
 import EventDetailsSection from '../components/EventDetailsSection';
@@ -39,6 +41,11 @@ export default function CreateYourEvent() {
   const [requiredActivityCount, setRequiredActivityCount] = useState('');
   const [requiredSupportCount, setRequiredSupportCount] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [notification, setNotification] = useState({
+    open: false,
+    severity: 'success',
+    message: ''
+  });
 
   // Activity Support Categories - when one is selected, conflicting ones get disabled
   const supportCategories = {
@@ -167,9 +174,17 @@ export default function CreateYourEvent() {
       });
       if (!res.ok) throw new Error();
       await res.json();
-      alert('Event created successfully!');
+      setNotification({
+        open: true,
+        severity: 'success',
+        message: 'Event created successfully!'
+      });
     } catch {
-      alert('Error creating event');
+      setNotification({
+        open: true,
+        severity: 'error',
+        message: 'Error creating event'
+      });
     }
   };
 
@@ -190,6 +205,7 @@ export default function CreateYourEvent() {
 
 
   return (
+    <>
     <Container maxWidth="md" className="single-event-container">
       <div className="single-event-header">
         <Typography variant="h4" gutterBottom className="single-event-title">
@@ -242,5 +258,19 @@ export default function CreateYourEvent() {
         </form>
       </Paper>
     </Container>
+    <Snackbar
+      open={notification.open}
+      autoHideDuration={6000}
+      onClose={() => setNotification({ ...notification, open: false })}
+    >
+      <Alert
+        onClose={() => setNotification({ ...notification, open: false })}
+        severity={notification.severity}
+        sx={{ width: '100%' }}
+      >
+        {notification.message}
+      </Alert>
+    </Snackbar>
+    </>
   );
 }
