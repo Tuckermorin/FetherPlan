@@ -1,36 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 
 interface UnsavedChangesGuardProps {
   isDirty: boolean;
-  children: (props: { attemptNavigate: (path: string) => void }) => React.ReactNode;
+  children: (props: { attemptNavigate: (navigateFn: () => void) => void }) => React.ReactNode;
 }
 
 const UnsavedChangesGuard: React.FC<UnsavedChangesGuardProps> = ({ isDirty, children }) => {
-  const navigate = useNavigate();
-  const [pendingPath, setPendingPath] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
-  const handleClose = () => setPendingPath(null);
+  const handleClose = () => setPendingAction(null);
 
-  const attemptNavigate = (path: string) => {
+  const attemptNavigate = (action: () => void) => {
     if (!isDirty) {
-      navigate(path);
+      action();
       return;
     }
-    setPendingPath(path);
+    setPendingAction(() => action);
   };
 
   const confirmLeave = () => {
-    if (pendingPath) {
-      navigate(pendingPath);
+    if (pendingAction) {
+      pendingAction();
     }
   };
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isDirty]);
 
   return (
     <>
       {children({ attemptNavigate })}
-      <Dialog open={Boolean(pendingPath)} onClose={handleClose}>
+      <Dialog open={Boolean(pendingAction)} onClose={handleClose} PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle>Unsaved Changes</DialogTitle>
         <DialogContent>
           <Typography>You have unsaved changes—are you sure you want to leave?</Typography>
