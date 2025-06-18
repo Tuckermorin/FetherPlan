@@ -357,7 +357,7 @@ const BackButton = () => (
                       mb: 3,
                     }}
                   >
-                    Effortless Event Planning
+                    Group Planning Made Simple
                   </Typography>
                   <Typography
                     variant="h6"
@@ -369,8 +369,7 @@ const BackButton = () => (
                       fontWeight: 400,
                     }}
                   >
-                    Fether simplifies the way you plan, organize, and manage events. From single gatherings 
-                    to multi-day experiences, our platform provides all the tools you need to bring people together.
+                    Consolidate details, gather input, finalize your itinerary and costs, and schedule everything in one place.
                   </Typography>
                 </Box>
                 
@@ -489,7 +488,7 @@ const BackButton = () => (
                       fontWeight: 400,
                     }}
                   >
-                    Are you on your fifth attempt to plan that girls trip? That family reunion? That couples dinner date?
+                    Are you on your fifth attempt to plan that girls trip? That family reunion? That couples dinner date? We're all busy, it can be a burden to plan these events.
                     Fether is here to change that. Our platform is designed to streamline the entire process, making it easy.
                   </Typography>
                   <Button
