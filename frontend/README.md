@@ -1,3 +1,18 @@
+Final Project Notes
+There are three (3) main pages that I've been working on for this project - the landing page, event creation page, and preview page.
+
+Landing Page
+- The UI was the focus for this page as I wanted the design to be simple and welcoming. This is why you only see the top header and the welcome message. You are able to scroll down and see more of the "story" of Fether, but I like how if you already know the website there's no fluff upon entry.
+- Main strengths are UI/UX
+
+Event Creation Page
+- Easily where most of the work I've spent on this project. It was necessary to start on paper to get the idea of "flow" for this page. I asked for feedback from family, and went over a lot of different variations of what to make the page look like. Conveying simplicity, while also making it capable of complex planning, was difficult.
+- Main strengths are the UI/UX, the Event Progress tracker, and interactive buttons.
+
+Preview Page
+- This is what the participant will see when they get the link. I had to add a way to vote on options and display the voted option costs. The view selection summary is essentially the itinerary of the event assuming the voted options are finalized.
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
