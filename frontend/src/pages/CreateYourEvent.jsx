@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Container,
   Button,
@@ -13,28 +13,33 @@ import PreviewEvent from './PreviewEvent';
 import EventDetailsSection from '../components/EventDetailsSection';
 import ActivityOptionsSection from '../components/ActivityOptionsSection';
 import ActivitySupportSection from '../components/ActivitySupportSection';
+import UnsavedChangesGuard from '../components/UnsavedChangesGuard';
 import './CreateYourEvent.css';
 
-export default function CreateYourEvent() {
-  const [eventData, setEventData] = useState({
-    name: '',
-    description: '',
-    isPublic: true,
-    rsvpDeadline: '',
-    maxParticipants: '',
-    tags: [],
-    tagsString: ''
-  });
+const initialEventData = {
+  name: '',
+  description: '',
+  isPublic: true,
+  rsvpDeadline: '',
+  maxParticipants: '',
+  tags: [],
+  tagsString: ''
+};
 
-  const [dateTimeData, setDateTimeData] = useState({
-    dateMode: 'single',
-    date: '',
-    time: '',
-    startDate: '',
-    endDate: '',
-    allowParticipantSelection: false,
-    requiredDayCount: ''
-  });
+const initialDateTimeData = {
+  dateMode: 'single',
+  date: '',
+  time: '',
+  startDate: '',
+  endDate: '',
+  allowParticipantSelection: false,
+  requiredDayCount: ''
+};
+
+export default function CreateYourEvent() {
+  const [eventData, setEventData] = useState({ ...initialEventData });
+
+  const [dateTimeData, setDateTimeData] = useState({ ...initialDateTimeData });
 
   const [activities, setActivities] = useState([]);
   const [activitySupports, setActivitySupports] = useState([]);
@@ -65,6 +70,17 @@ export default function CreateYourEvent() {
       conflicts: []
     }
   };
+
+  const formIsDirty = useMemo(
+    () =>
+      JSON.stringify(eventData) !== JSON.stringify(initialEventData) ||
+      JSON.stringify(dateTimeData) !== JSON.stringify(initialDateTimeData) ||
+      activities.length > 0 ||
+      activitySupports.length > 0 ||
+      requiredActivityCount !== '' ||
+      requiredSupportCount !== '',
+    [eventData, dateTimeData, activities, activitySupports, requiredActivityCount, requiredSupportCount]
+  );
 
   const handleEventDataChange = (field, value) => {
     setEventData(prev => ({
@@ -205,7 +221,9 @@ export default function CreateYourEvent() {
 
 
   return (
-    <>
+    <UnsavedChangesGuard isDirty={formIsDirty}>
+      {({ attemptNavigate }) => (
+        <>
     <Container maxWidth="md" className="single-event-container">
       <div className="single-event-header">
         <Typography variant="h4" gutterBottom className="single-event-title">
@@ -271,6 +289,8 @@ export default function CreateYourEvent() {
         {notification.message}
       </Alert>
     </Snackbar>
-    </>
+        </>
+      )}
+    </UnsavedChangesGuard>
   );
 }

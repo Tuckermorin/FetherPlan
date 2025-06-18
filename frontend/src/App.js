@@ -131,11 +131,7 @@ export default function App() {
 const BackButton = () => (
     <Button
       variant="text"
-      onClick={() => {
-        if (window.confirm('Are you sure you want to leave?')) {
-          setPage('landing');
-        }
-      }}
+      onClick={() => setPage('landing')}
       sx={{
         mb: 3,
         color: '#6366f1',
