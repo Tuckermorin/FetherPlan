@@ -1,21 +1,14 @@
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 
-interface UnsavedChangesGuardProps {
-  isDirty: boolean;
-  children: (props: { attemptNavigate: (path: string) => void }) => React.ReactNode;
-}
-
-const UnsavedChangesGuard: React.FC<UnsavedChangesGuardProps> = ({ isDirty, children }) => {
-  const navigate = useNavigate();
-  const [pendingPath, setPendingPath] = useState<string | null>(null);
+export default function UnsavedChangesGuard({ isDirty, children }) {
+  const [pendingPath, setPendingPath] = useState(null);
 
   const handleClose = () => setPendingPath(null);
 
-  const attemptNavigate = (path: string) => {
+  const attemptNavigate = (path) => {
     if (!isDirty) {
-      navigate(path);
+      window.location.href = path;
       return;
     }
     setPendingPath(path);
@@ -23,7 +16,7 @@ const UnsavedChangesGuard: React.FC<UnsavedChangesGuardProps> = ({ isDirty, chil
 
   const confirmLeave = () => {
     if (pendingPath) {
-      navigate(pendingPath);
+      window.location.href = pendingPath;
     }
   };
 
@@ -46,6 +39,4 @@ const UnsavedChangesGuard: React.FC<UnsavedChangesGuardProps> = ({ isDirty, chil
       </Dialog>
     </>
   );
-};
-
-export default UnsavedChangesGuard;
+}
