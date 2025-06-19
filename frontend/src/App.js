@@ -603,8 +603,8 @@ export default function App() {
             {!isMobile && <EventProgressTracker activities={[]} />}
             <Box sx={{ flexGrow: 1, pt: 2, overflow: 'auto', ml: isMobile ? 0 : '280px', pb: isMobile ? '60px' : 0 }}>
               <Container maxWidth="md" sx={{ py: 4 }}>
-                <BackButton />
-                <CreateYourEvent />
+                {/* <BackButton /> */}
+                <CreateYourEvent onBack={() => setPage('landing')} />
               </Container>
             </Box>
             {isMobile && <MobileProgressTracker activities={[]} />}

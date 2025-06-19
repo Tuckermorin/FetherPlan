@@ -121,7 +121,7 @@ export default function EventDetailsSection({ eventData, dateTimeData, onEventDa
                     className="activity-switch"
                   />
                 }
-                label="Ask participants to select a number of days within this range"
+                label="Ask participants to select a number of days within this range?"
               />
             </Grid>
             {dateTimeData.allowParticipantSelection && (

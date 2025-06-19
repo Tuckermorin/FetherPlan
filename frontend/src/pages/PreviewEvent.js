@@ -11,16 +11,16 @@ import {
   CardActions,
   Chip,
   Grid,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
+  // Checkbox,
+  // FormControlLabel,
+  // FormGroup,
   Alert
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import PublicIcon from '@mui/icons-material/Public';
-import LockIcon from '@mui/icons-material/Lock';
+// import PublicIcon from '@mui/icons-material/Public';
+// import LockIcon from '@mui/icons-material/Lock';
 
 const PreviewEvent = ({ 
   eventData, 
@@ -539,12 +539,12 @@ const PreviewEvent = ({
         <Divider style={{ margin: '1.5rem 0' }} />
 
         {/* Event Visibility */}
-        <Box display="flex" alignItems="center" mb={2}>
+        {/* <Box display="flex" alignItems="center" mb={2}>
           {eventData.isPublic ? <PublicIcon color="primary" /> : <LockIcon color="error" />}
           <Typography variant="subtitle1" style={{ marginLeft: '0.5rem' }}>
             {eventData.isPublic ? 'Public Event' : 'Private Event'}
           </Typography>
-        </Box>
+        </Box> */}
 
         {/* Selection Summary */}
         {(selectedActivities.length > 0 || selectedSupports.length > 0) && (
