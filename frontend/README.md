@@ -12,6 +12,8 @@ Event Creation Page
 Preview Page
 - This is what the participant will see when they get the link. I had to add a way to vote on options and display the voted option costs. The view selection summary is essentially the itinerary of the event assuming the voted options are finalized.
 
+Adjustments Have been made to make the app more mobile friendly as well as remove the alerts that were showing up before.
+
 
 # Getting Started with Create React App
 
