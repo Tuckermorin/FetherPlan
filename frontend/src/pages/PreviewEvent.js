@@ -11,11 +11,15 @@ import {
   CardActions,
   Chip,
   Grid,
-  // Checkbox,
-  // FormControlLabel,
-  // FormGroup,
+  TextField,
+  Snackbar,
+  CircularProgress,
+  Stepper,
+  Step,
+  StepLabel,
   Alert
 } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EventIcon from '@mui/icons-material/Event';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -29,14 +33,22 @@ const PreviewEvent = ({
   activitySupports, 
   requiredActivityCount,
   requiredSupportCount,
-  onEdit, 
-  onConfirm 
+  onEdit
 }) => {
   const [selectedActivities, setSelectedActivities] = useState([]);
   const [selectedSupports, setSelectedSupports] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishedEvent, setPublishedEvent] = useState(null);
+  const [publishError, setPublishError] = useState('');
+  const [shareableLink, setShareableLink] = useState('');
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [phones, setPhones] = useState([]);
+  const [phoneInput, setPhoneInput] = useState('');
+  const [sendingInvites, setSendingInvites] = useState(false);
+  const [inviteSnack, setInviteSnack] = useState({ open: false, message: '', severity: 'success' });
 
   const handleActivitySelection = (activityId) => {
     setSelectedActivities(prev => {
@@ -238,6 +250,174 @@ const PreviewEvent = ({
     );
   };
 
+  // Publish event to backend
+  const handlePublish = async () => {
+    const payload = {
+      eventData,
+      dateTimeData,
+      activities,
+      activitySupports,
+      requiredActivityCount,
+      requiredSupportCount
+    };
+
+    setPublishing(true);
+    setPublishError('');
+    try {
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || 'Error creating event');
+      }
+      const saved = await res.json();
+      setPublishedEvent(saved);
+      const url = saved.shareableLink || `${window.location.origin}/events/${saved._id}`;
+      setShareableLink(url);
+    } catch (err) {
+      console.error(err);
+      setPublishError('Failed to create event.');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareableLink);
+      setCopyOpen(true);
+    } catch {
+      setCopyOpen(true);
+    }
+  };
+
+  const addPhone = () => {
+    const val = phoneInput.trim();
+    if (val && !phones.includes(val)) {
+      setPhones(prev => [...prev, val]);
+    }
+    setPhoneInput('');
+  };
+
+  const handlePhoneKey = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addPhone();
+    }
+  };
+
+  const removePhone = (p) => {
+    setPhones(prev => prev.filter(ph => ph !== p));
+  };
+
+  const sendInvites = async () => {
+    if (!publishedEvent) return;
+    setSendingInvites(true);
+    try {
+      const res = await fetch(`/api/events/${publishedEvent._id}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: publishedEvent._id, phones })
+      });
+      if (!res.ok) throw new Error();
+      setInviteSnack({ open: true, severity: 'success', message: 'Invites sent!' });
+    } catch (err) {
+      console.error(err);
+      setInviteSnack({ open: true, severity: 'error', message: 'Failed to send invites' });
+    } finally {
+      setSendingInvites(false);
+    }
+  };
+
+  if (publishedEvent) {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 4 }}>
+        <Stepper activeStep={1} sx={{ mb: 3 }}>
+          <Step completed>
+            <StepLabel>Preview</StepLabel>
+          </Step>
+          <Step completed>
+            <StepLabel>Publish</StepLabel>
+          </Step>
+        </Stepper>
+        <Paper elevation={3} sx={{ p: 3 }}>
+          <Typography variant="h5" align="center" gutterBottom>
+            Your event has been created!
+          </Typography>
+          {publishError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {publishError}
+            </Alert>
+          )}
+          <TextField
+            label="Shareable Link"
+            fullWidth
+            value={shareableLink}
+            InputProps={{ readOnly: true }}
+            sx={{ mb: 2 }}
+          />
+          <Button
+            variant="outlined"
+            startIcon={<ContentCopyIcon />}
+            onClick={handleCopyLink}
+            sx={{ mb: 3 }}
+          >
+            Copy Link
+          </Button>
+
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              label="Add phone number"
+              value={phoneInput}
+              onChange={(e) => setPhoneInput(e.target.value)}
+              onKeyDown={handlePhoneKey}
+              size="small"
+              sx={{ mr: 1 }}
+            />
+            <Button onClick={addPhone}>Add</Button>
+            <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {phones.map((p) => (
+                <Chip key={p} label={p} onDelete={() => removePhone(p)} />
+              ))}
+            </Box>
+          </Box>
+
+          <Button
+            variant="contained"
+            onClick={sendInvites}
+            disabled={sendingInvites || phones.length === 0}
+          >
+            {sendingInvites ? <CircularProgress size={24} /> : 'Send Invites'}
+          </Button>
+        </Paper>
+        <Snackbar
+          open={copyOpen}
+          autoHideDuration={3000}
+          onClose={() => setCopyOpen(false)}
+        >
+          <Alert onClose={() => setCopyOpen(false)} severity="success">
+            Link copied!
+          </Alert>
+        </Snackbar>
+        <Snackbar
+          open={inviteSnack.open}
+          autoHideDuration={4000}
+          onClose={() => setInviteSnack({ ...inviteSnack, open: false })}
+        >
+          <Alert
+            onClose={() => setInviteSnack({ ...inviteSnack, open: false })}
+            severity={inviteSnack.severity}
+          >
+            {inviteSnack.message}
+          </Alert>
+        </Snackbar>
+      </Container>
+    );
+  }
+
   if (showConfirmation) {
     return (
       <Container maxWidth="md" style={{ marginTop: '2rem' }}>
@@ -310,8 +490,8 @@ const PreviewEvent = ({
           <Button variant="outlined" onClick={() => setShowConfirmation(false)}>
             Back to Preview
           </Button>
-          <Button variant="contained" color="success" onClick={onConfirm}>
-            Confirm & Publish Event
+          <Button variant="contained" color="success" onClick={handlePublish} disabled={publishing}>
+            {publishing ? <CircularProgress size={24} /> : 'Confirm & Publish Event'}
           </Button>
         </Box>
       </Container>
@@ -590,8 +770,8 @@ const PreviewEvent = ({
               View Selection Summary
             </Button>
           )}
-          <Button variant="contained" color="success" onClick={onConfirm}>
-            Publish Event
+          <Button variant="contained" color="success" onClick={handlePublish} disabled={publishing}>
+            {publishing ? <CircularProgress size={24} /> : 'Publish Event'}
           </Button>
         </Box>
       </Box>
