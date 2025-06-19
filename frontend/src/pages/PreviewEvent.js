@@ -261,25 +261,35 @@ const PreviewEvent = ({
       requiredSupportCount
     };
 
+    console.log('Publishing event with payload:', payload); // Debug log
+
     setPublishing(true);
     setPublishError('');
     try {
-      const res = await fetch('/api/events', {
+      const res = await fetch('http://localhost:5000/api/events', { // Fixed URL
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      
+      console.log('Response status:', res.status); // Debug log
+      console.log('Response ok:', res.ok); // Debug log
+      
       if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || 'Error creating event');
+        const errorText = await res.text();
+        console.error('Error response:', errorText); // Debug log
+        throw new Error(errorText || `HTTP error! status: ${res.status}`);
       }
+      
       const saved = await res.json();
+      console.log('Event saved successfully:', saved); // Debug log
+      
       setPublishedEvent(saved);
       const url = saved.shareableLink || `${window.location.origin}/events/${saved._id}`;
       setShareableLink(url);
     } catch (err) {
-      console.error(err);
-      setPublishError('Failed to create event.');
+      console.error('Publish error:', err); // Enhanced error logging
+      setPublishError(`Failed to create event: ${err.message}`);
     } finally {
       setPublishing(false);
     }
