@@ -473,7 +473,7 @@ export default function App() {
                   <Button
                     variant="contained"
                     size="large"
-                    onClick={() => setPage('typeSelect')}
+                    onClick={() => setPage('create')}
                     sx={{
                       py: 2,
                       px: 6,

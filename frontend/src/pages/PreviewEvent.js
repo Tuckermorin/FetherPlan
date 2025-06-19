@@ -321,7 +321,7 @@ const PreviewEvent = ({
   return (
     <Container maxWidth="md" style={{ marginTop: '2rem' }}>
       <Typography variant="h4" align="center" gutterBottom>
-        Event Preview - Participant View
+        Participant View of Event Invite
       </Typography>
 
       <Typography variant="h6" align="center" gutterBottom>
