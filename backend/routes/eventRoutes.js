@@ -10,8 +10,10 @@ router.use((req, _, next) => {
 // Create a new event
 router.post('/', async (req, res) => {
   try {
+    console.log('EventRoutes POST body:', req.body);     
     const evt = new Event(req.body);
     const saved = await evt.save();
+    console.log('Event saved:', saved);      
     res.status(201).json(saved);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -20,6 +22,7 @@ router.post('/', async (req, res) => {
 
 // Get all events
 router.get('/', async (req, res) => {
+  console.log('EventRoutes got: GET');  
   try {
     const events = await Event.find();
     res.json(events);
