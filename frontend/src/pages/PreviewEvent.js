@@ -264,6 +264,7 @@ const PreviewEvent = ({
     setPublishing(true);
     setPublishError('');
     try {
+      const res = await fetch('http://localhost:5000/api/events', {
       const res = await fetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -317,7 +318,9 @@ const PreviewEvent = ({
     if (!publishedEvent) return;
     setSendingInvites(true);
     try {
+      const res = await fetch(`http://localhost:5000/api/events/${publishedEvent._id}/invite`, {
       const res = await fetch(`/api/events/${publishedEvent._id}/invite`, {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: publishedEvent._id, phones })
