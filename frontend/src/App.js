@@ -1,14 +1,17 @@
+// frontend/src/App.js
 import React, { useState } from 'react';
 import {
-  ThemeProvider,
-  createTheme,
   CssBaseline,
   Box,
   Container,
   useMediaQuery,
-  useTheme
 } from '@mui/material';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { ErrorBoundary } from './components/ErrorHandling';
 import CreateYourEvent from './pages/CreateYourEvent';
+import EventsList from './pages/EventsList';
 import EventProgressTracker from './components/EventProgressTracker';
 import MobileProgressTracker from './components/MobileProgressTracker';
 import GlobalHeader from './components/GlobalHeader';
@@ -17,139 +20,106 @@ import AboutSection from './components/AboutSection';
 import CTASection from './components/CTASection';
 import Footer from './components/Footer';
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#6366f1', // Modern indigo
-      light: '#8b5cf6', // Purple accent
-      dark: '#4f46e5',
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
     },
-    secondary: {
-      main: '#ec4899', // Pink accent
-      light: '#f472b6',
-    },
-    background: {
-      default: '#fafafb',
-      paper: '#ffffff',
-    },
-    text: {
-      primary: '#1f2937',
-      secondary: '#6b7280',
-    },
-    success: {
-      main: '#10b981',
-    },
-    warning: {
-      main: '#f59e0b',
-    },
-  },
-  typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h3: {
-      fontWeight: 700,
-      letterSpacing: '-0.025em',
-    },
-    h4: {
-      fontWeight: 600,
-      letterSpacing: '-0.025em',
-    },
-    subtitle1: {
-      fontSize: '1.125rem',
-      fontWeight: 400,
-    },
-    button: {
-      textTransform: 'none',
-      fontWeight: 500,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          padding: '12px 24px',
-          fontSize: '1rem',
-          boxShadow: 'none',
-          '&:hover': {
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            transform: 'translateY(-1px)',
-          },
-          transition: 'all 0.2s ease-in-out',
-        },
-        contained: {
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-          '&:hover': {
-            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-          },
-        },
-        outlined: {
-          borderWidth: 2,
-          '&:hover': {
-            borderWidth: 2,
-            backgroundColor: 'rgba(99, 102, 241, 0.04)',
-          },
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 16,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid rgba(229, 231, 235, 0.8)',
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-        },
-      },
-    },
-    MuiTooltip: {
-      styleOverrides: {
-        tooltip: {
-          fontSize: '14px',
-          backgroundColor: '#374151',
-          borderRadius: 8,
-        },
-      },
+    mutations: {
+      retry: 1,
     },
   },
 });
 
-export default function App() {
+function AppContent() {
   const [page, setPage] = useState('landing');
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const isMobile = useMediaQuery('(max-width:700px)');
 
+  const handleCreateEvent = () => setPage('create');
+  const handleViewEvents = () => setPage('events');
+  const handleViewEvent = (event) => {
+    setSelectedEvent(event);
+    setPage('view');
+  };
+  const handleEditEvent = (event) => {
+    setSelectedEvent(event);
+    setPage('edit');
+  };
+
   return (
-    <ThemeProvider theme={theme}>
+    <ErrorBoundary>
       <CssBaseline />
-      <GlobalHeader onHome={() => setPage('landing')} />
+      <GlobalHeader 
+        onHome={() => setPage('landing')}
+        onViewEvents={handleViewEvents}
+        currentPage={page}
+      />
 
       {page === 'landing' && (
         <Box sx={{ minHeight: '100vh' }}>
-          <HeroSection onCreate={() => setPage('create')} />
+          <HeroSection 
+            onCreate={handleCreateEvent}
+            onViewEvents={handleViewEvents}
+          />
           <AboutSection />
-          <CTASection onCreate={() => setPage('create')} />
+          <CTASection onCreate={handleCreateEvent} />
           <Footer />
         </Box>
       )}
 
-        {page === 'create' && (
-          <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#fafafb', pt: 8 }}>
-            {!isMobile && <EventProgressTracker activities={[]} />}
-            <Box sx={{ flexGrow: 1, pt: 2, overflow: 'auto', ml: isMobile ? 0 : '280px', pb: isMobile ? '60px' : 0 }}>
-              <Container maxWidth="md" sx={{ py: 4 }}>
-                {/* <BackButton /> */}
-                <CreateYourEvent onBack={() => setPage('landing')} />
-              </Container>
-            </Box>
-            {isMobile && <MobileProgressTracker activities={[]} />}
-          </Box>
-        )}
+      {page === 'events' && (
+        <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default', pt: 8 }}>
+          <EventsList
+            onCreateNew={handleCreateEvent}
+            onViewEvent={handleViewEvent}
+            onEditEvent={handleEditEvent}
+          />
+        </Box>
+      )}
 
-    </ThemeProvider>
+      {(page === 'create' || page === 'edit') && (
+        <Box sx={{ 
+          display: 'flex', 
+          height: '100vh', 
+          backgroundColor: 'background.default', 
+          pt: 8 
+        }}>
+          {!isMobile && <EventProgressTracker activities={[]} />}
+          <Box sx={{ 
+            flexGrow: 1, 
+            pt: 2, 
+            overflow: 'auto', 
+            ml: isMobile ? 0 : '280px', 
+            pb: isMobile ? '60px' : 0 
+          }}>
+            <Container maxWidth="md" sx={{ py: 4 }}>
+              <CreateYourEvent 
+                onBack={() => setPage(page === 'edit' ? 'events' : 'landing')}
+                editEvent={page === 'edit' ? selectedEvent : null}
+              />
+            </Container>
+          </Box>
+          {isMobile && <MobileProgressTracker activities={[]} />}
+        </Box>
+      )}
+    </ErrorBoundary>
+  );
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AppContent />
+        {process.env.NODE_ENV === 'development' && (
+          <ReactQueryDevtools initialIsOpen={false} />
+        )}
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
