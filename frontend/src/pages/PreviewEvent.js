@@ -23,6 +23,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EventIcon from '@mui/icons-material/Event';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import { calculateEventCost } from '../utils/costUtils';
 
 const PreviewEvent = ({ 
   eventData, 
@@ -83,51 +84,17 @@ const PreviewEvent = ({
   };
 
   const calculateTotalCost = () => {
-    let total = 0;
-    
-    // Add all fixed activities to the total
-    fixedActivities.forEach(activity => {
-      if (activity.costMode === 'fixed' && activity.cost) {
-        total += parseFloat(activity.cost);
-      } else if (activity.costMode === 'range' && activity.minCost) {
-        total += parseFloat(activity.minCost); // Use minimum for estimation
-      }
+    const fixedCost = calculateEventCost({
+      activities: fixedActivities,
+      supports: fixedSupports,
     });
 
-    // Add all fixed supports to the total
-    fixedSupports.forEach(support => {
-      if (support.costMode === 'fixed' && support.cost) {
-        total += parseFloat(support.cost);
-      } else if (support.costMode === 'range' && support.minCost) {
-        total += parseFloat(support.minCost); // Use minimum for estimation
-      }
-    });
-    
-    // Calculate selected votable activity costs
-    selectedActivities.forEach(activityId => {
-      const activity = votableActivities.find(a => a.id === activityId);
-      if (activity) {
-        if (activity.costMode === 'fixed' && activity.cost) {
-          total += parseFloat(activity.cost);
-        } else if (activity.costMode === 'range' && activity.minCost) {
-          total += parseFloat(activity.minCost); // Use minimum for estimation
-        }
-      }
+    const selectedCost = calculateEventCost({
+      activities: votableActivities.filter(a => selectedActivities.includes(a.id)),
+      supports: votableSupports.filter(s => selectedSupports.includes(s.id)),
     });
 
-    // Calculate selected votable support costs
-    selectedSupports.forEach(supportId => {
-      const support = votableSupports.find(s => s.id === supportId);
-      if (support) {
-        if (support.costMode === 'fixed' && support.cost) {
-          total += parseFloat(support.cost);
-        } else if (support.costMode === 'range' && support.minCost) {
-          total += parseFloat(support.minCost); // Use minimum for estimation
-        }
-      }
-    });
-
-    return total;
+    return fixedCost + selectedCost;
   };
 
   const getCostDisplay = (item) => {
@@ -807,76 +774,7 @@ const PreviewEvent = ({
           )}
           
           <Typography variant="subtitle1" color="primary" sx={{ mt: 2, fontWeight: 600 }}>
-            Estimated Total: {(() => {
-              let minTotal = 0;
-              let maxTotal = 0;
-              let hasRanges = false;
-
-              // Add all fixed activities
-              fixedActivities.forEach(activity => {
-                if (activity.costMode === 'fixed' && activity.cost) {
-                  minTotal += parseFloat(activity.cost);
-                  maxTotal += parseFloat(activity.cost);
-                } else if (activity.costMode === 'range' && activity.minCost && activity.maxCost) {
-                  minTotal += parseFloat(activity.minCost);
-                  maxTotal += parseFloat(activity.maxCost);
-                  hasRanges = true;
-                }
-              });
-
-              // Add all fixed supports
-              fixedSupports.forEach(support => {
-                if (support.costMode === 'fixed' && support.cost) {
-                  minTotal += parseFloat(support.cost);
-                  maxTotal += parseFloat(support.cost);
-                } else if (support.costMode === 'range' && support.minCost && support.maxCost) {
-                  minTotal += parseFloat(support.minCost);
-                  maxTotal += parseFloat(support.maxCost);
-                  hasRanges = true;
-                }
-              });
-
-              // Add selected votable activities
-              selectedActivities.forEach(activityId => {
-                const activity = votableActivities.find(a => a.id === activityId);
-                if (activity) {
-                  if (activity.costMode === 'fixed' && activity.cost) {
-                    minTotal += parseFloat(activity.cost);
-                    maxTotal += parseFloat(activity.cost);
-                  } else if (activity.costMode === 'range' && activity.minCost && activity.maxCost) {
-                    minTotal += parseFloat(activity.minCost);
-                    maxTotal += parseFloat(activity.maxCost);
-                    hasRanges = true;
-                  }
-                }
-              });
-
-              // Add selected votable supports
-              selectedSupports.forEach(supportId => {
-                const support = votableSupports.find(s => s.id === supportId);
-                if (support) {
-                  if (support.costMode === 'fixed' && support.cost) {
-                    minTotal += parseFloat(support.cost);
-                    maxTotal += parseFloat(support.cost);
-                  } else if (support.costMode === 'range' && support.minCost && support.maxCost) {
-                    minTotal += parseFloat(support.minCost);
-                    maxTotal += parseFloat(support.maxCost);
-                    hasRanges = true;
-                  }
-                }
-              });
-
-              // If there are any ranges OR if we have any costs at all, show as range
-              if (minTotal === maxTotal && minTotal > 0) {
-                // All fixed costs, but show as range for consistency
-                return `$${minTotal.toFixed(2)} - $${(maxTotal * 1.1).toFixed(2)}*`;
-              } else if (minTotal !== maxTotal) {
-                // Mixed or range costs
-                return `$${minTotal.toFixed(2)} - $${maxTotal.toFixed(2)}`;
-              } else {
-                return '$0.00';
-              }
-            })()}
+            Estimated Total: ${calculateTotalCost().toFixed(2)}
           </Typography>
           
         </Box>
