@@ -19,6 +19,7 @@ import HeroSection from './components/HeroSection';
 import AboutSection from './components/AboutSection';
 import CTASection from './components/CTASection';
 import Footer from './components/Footer';
+import JoinEvent from './pages/JoinEvent';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -36,12 +37,16 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
-  const [page, setPage] = useState('landing');
+  const params = new URLSearchParams(window.location.search);
+  const startCode = params.get('code') || '';
+  const [page, setPage] = useState(startCode ? 'join' : 'landing');
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [joinCode] = useState(startCode);
   const isMobile = useMediaQuery('(max-width:700px)');
 
   const handleCreateEvent = () => setPage('create');
   const handleViewEvents = () => setPage('events');
+  const handleJoinEvent = () => setPage('join');
   const handleViewEvent = (event) => {
     setSelectedEvent(event);
     setPage('view');
@@ -62,9 +67,10 @@ function AppContent() {
 
       {page === 'landing' && (
         <Box sx={{ minHeight: '100vh' }}>
-          <HeroSection 
+          <HeroSection
             onCreate={handleCreateEvent}
             onViewEvents={handleViewEvents}
+            onJoin={handleJoinEvent}
           />
           <AboutSection />
           <CTASection onCreate={handleCreateEvent} />
@@ -83,7 +89,7 @@ function AppContent() {
       )}
 
       {(page === 'create' || page === 'edit') && (
-        <Box sx={{ 
+        <Box sx={{
           display: 'flex', 
           height: '100vh', 
           backgroundColor: 'background.default', 
@@ -105,6 +111,12 @@ function AppContent() {
             </Container>
           </Box>
           {isMobile && <MobileProgressTracker activities={[]} />}
+        </Box>
+      )}
+
+      {page === 'join' && (
+        <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default', pt: 8 }}>
+          <JoinEvent onBack={() => setPage('landing')} defaultCode={joinCode} />
         </Box>
       )}
     </ErrorBoundary>

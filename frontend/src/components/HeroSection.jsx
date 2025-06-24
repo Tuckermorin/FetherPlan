@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Container, Typography, Fade, Button } from '@mui/material';
 
-export default function HeroSection({ onCreate }) {
+export default function HeroSection({ onCreate, onJoin }) {
   return (
     <Box
       sx={{
@@ -74,6 +74,7 @@ export default function HeroSection({ onCreate }) {
               <Button
                 variant="outlined"
                 size="large"
+                onClick={onJoin}
                 sx={{
                   py: 2,
                   px: 4,
