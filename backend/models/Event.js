@@ -24,6 +24,8 @@ const eventSchema = new mongoose.Schema({
   activitySupports:      { type: Array, default: [] },
   requiredActivityCount: { type: Number, default: 0 },
   requiredSupportCount:  { type: Number, default: 0 },
+  eventCode:            { type: String, unique: true },
+  adminCode:            { type: String, unique: true },
 }, {
   timestamps: true
 });

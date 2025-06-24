@@ -366,6 +366,22 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
             </Button>
           </Box>
 
+          <Box sx={{ mt: 4, textAlign: 'center' }}>
+            <Typography variant="h6" gutterBottom>Share with participants</Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Event Code: <strong>{publishedEvent.eventCode}</strong>
+            </Typography>
+            <Box sx={{ mb: 2 }}>
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(window.location.origin + '?code=' + publishedEvent.eventCode)}&size=150x150`} alt="QR" />
+            </Box>
+            <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+              {window.location.origin + '?code=' + publishedEvent.eventCode}
+            </Typography>
+            <Typography variant="caption" display="block" sx={{ mt: 2 }}>
+              Admin Code: {publishedEvent.adminCode}
+            </Typography>
+          </Box>
+
           <Box sx={{ mt: 4, p: 3, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
             <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
               Event Summary

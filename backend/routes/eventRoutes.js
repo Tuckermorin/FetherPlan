@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Event = require('../models/Event');
+const crypto = require('crypto');
 
 router.use((req, _, next) => {
   console.log('EventRoutes got:', req.method, req.path);
@@ -10,10 +11,15 @@ router.use((req, _, next) => {
 // Create a new event
 router.post('/', async (req, res) => {
   try {
-    console.log('EventRoutes POST body:', req.body);     
-    const evt = new Event(req.body);
+    console.log('EventRoutes POST body:', req.body);
+    const generateCode = () => crypto.randomBytes(3).toString('hex');
+    const evt = new Event({
+      ...req.body,
+      eventCode: generateCode(),
+      adminCode: generateCode(),
+    });
     const saved = await evt.save();
-    console.log('Event saved:', saved);      
+    console.log('Event saved:', saved);
     res.status(201).json(saved);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -26,6 +32,28 @@ router.get('/', async (req, res) => {
   try {
     const events = await Event.find();
     res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get event by participant code
+router.get('/code/:code', async (req, res) => {
+  try {
+    const evt = await Event.findOne({ eventCode: req.params.code });
+    if (!evt) return res.status(404).json({ message: 'Event not found' });
+    res.json(evt);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get event by admin code
+router.get('/admin/:code', async (req, res) => {
+  try {
+    const evt = await Event.findOne({ adminCode: req.params.code });
+    if (!evt) return res.status(404).json({ message: 'Event not found' });
+    res.json(evt);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

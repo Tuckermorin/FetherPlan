@@ -59,6 +59,12 @@ export const eventApi = {
   // Vote on activity
   voteOnActivity: (eventId, activityId, vote) =>
     apiClient.put(`/events/${eventId}/activities/${activityId}/vote`, vote).then(res => res.data),
+
+  // Get event by participant code
+  getEventByCode: (code) => apiClient.get(`/events/code/${code}`).then(res => res.data),
+
+  // Get event by admin code
+  getEventByAdminCode: (code) => apiClient.get(`/events/admin/${code}`).then(res => res.data),
 };
 
 // Custom hooks using React Query
@@ -83,6 +89,32 @@ export const useEvent = (id, options = {}) => {
     queryFn: () => eventApi.getEvent(id),
     enabled: !!id,
     staleTime: 2 * 60 * 1000, // 2 minutes
+    onError: (error) => handleApiError(error, showNotification),
+    ...options,
+  });
+};
+
+export const useEventByCode = (code, options = {}) => {
+  const { showNotification } = useNotification();
+
+  return useQuery({
+    queryKey: ['eventCode', code],
+    queryFn: () => eventApi.getEventByCode(code),
+    enabled: !!code,
+    staleTime: 2 * 60 * 1000,
+    onError: (error) => handleApiError(error, showNotification),
+    ...options,
+  });
+};
+
+export const useEventByAdminCode = (code, options = {}) => {
+  const { showNotification } = useNotification();
+
+  return useQuery({
+    queryKey: ['eventAdminCode', code],
+    queryFn: () => eventApi.getEventByAdminCode(code),
+    enabled: !!code,
+    staleTime: 2 * 60 * 1000,
     onError: (error) => handleApiError(error, showNotification),
     ...options,
   });
