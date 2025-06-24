@@ -15,9 +15,16 @@ import {
   Switch,
   Button
 } from '@mui/material';
-import { InfoOutlined, DeleteOutline, Edit } from '@mui/icons-material';
+import { InfoOutlined, DeleteOutline, Edit, ContentCopy } from '@mui/icons-material';
 
-export default function ActivitySupportSection({ supportCategories, activitySupports, addActivitySupport, updateActivitySupport, removeActivitySupport }) {
+export default function ActivitySupportSection({ 
+  supportCategories, 
+  activitySupports, 
+  addActivitySupport, 
+  updateActivitySupport, 
+  removeActivitySupport,
+  completeAndCloneActivitySupport 
+}) {
   return (
     <Box>
       <Typography variant="h4" className="section-title" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -156,7 +163,20 @@ export default function ActivitySupportSection({ supportCategories, activitySupp
                         />
                       </Grid>
 
-                      <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                      <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+                        {/* Complete and Clone button */}
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<ContentCopy />}
+                          onClick={() => completeAndCloneActivitySupport(support.id)}
+                          disabled={support.costMode === 'fixed' ? support.cost === '' : support.minCost === '' || support.maxCost === ''}
+                          sx={{ mr: 1 }}
+                        >
+                          Complete & Clone
+                        </Button>
+                        
+                        {/* Regular complete button */}
                         <Button
                           variant="outlined"
                           size="small"

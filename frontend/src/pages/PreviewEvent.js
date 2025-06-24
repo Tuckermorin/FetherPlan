@@ -23,8 +23,6 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EventIcon from '@mui/icons-material/Event';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-// import PublicIcon from '@mui/icons-material/Public';
-// import LockIcon from '@mui/icons-material/Lock';
 
 const PreviewEvent = ({ 
   eventData, 
@@ -33,13 +31,13 @@ const PreviewEvent = ({
   activitySupports, 
   requiredActivityCount,
   requiredSupportCount,
-  onEdit
+  onEdit,
+  onConfirm
 }) => {
   const [selectedActivities, setSelectedActivities] = useState([]);
   const [selectedSupports, setSelectedSupports] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishedEvent, setPublishedEvent] = useState(null);
   const [publishError, setPublishError] = useState('');
@@ -49,6 +47,14 @@ const PreviewEvent = ({
   const [phoneInput, setPhoneInput] = useState('');
   const [sendingInvites, setSendingInvites] = useState(false);
   const [inviteSnack, setInviteSnack] = useState({ open: false, message: '', severity: 'success' });
+
+  // Separate activities into fixed and votable
+  const fixedActivities = activities.filter(a => !a.isVotable);
+  const votableActivities = activities.filter(a => a.isVotable);
+
+  // Separate supports into fixed and votable
+  const fixedSupports = activitySupports.filter(s => !s.isVotable);
+  const votableSupports = activitySupports.filter(s => s.isVotable);
 
   const handleActivitySelection = (activityId) => {
     setSelectedActivities(prev => {
@@ -79,9 +85,27 @@ const PreviewEvent = ({
   const calculateTotalCost = () => {
     let total = 0;
     
-    // Calculate activity costs
+    // Add all fixed activities to the total
+    fixedActivities.forEach(activity => {
+      if (activity.costMode === 'fixed' && activity.cost) {
+        total += parseFloat(activity.cost);
+      } else if (activity.costMode === 'range' && activity.minCost) {
+        total += parseFloat(activity.minCost); // Use minimum for estimation
+      }
+    });
+
+    // Add all fixed supports to the total
+    fixedSupports.forEach(support => {
+      if (support.costMode === 'fixed' && support.cost) {
+        total += parseFloat(support.cost);
+      } else if (support.costMode === 'range' && support.minCost) {
+        total += parseFloat(support.minCost); // Use minimum for estimation
+      }
+    });
+    
+    // Calculate selected votable activity costs
     selectedActivities.forEach(activityId => {
-      const activity = activities.find(a => a.id === activityId);
+      const activity = votableActivities.find(a => a.id === activityId);
       if (activity) {
         if (activity.costMode === 'fixed' && activity.cost) {
           total += parseFloat(activity.cost);
@@ -91,9 +115,9 @@ const PreviewEvent = ({
       }
     });
 
-    // Calculate support costs
+    // Calculate selected votable support costs
     selectedSupports.forEach(supportId => {
-      const support = activitySupports.find(s => s.id === supportId);
+      const support = votableSupports.find(s => s.id === supportId);
       if (support) {
         if (support.costMode === 'fixed' && support.cost) {
           total += parseFloat(support.cost);
@@ -261,34 +285,25 @@ const PreviewEvent = ({
       requiredSupportCount
     };
 
-    console.log('Publishing event with payload:', payload); // Debug log
-
     setPublishing(true);
     setPublishError('');
     try {
-      const res = await fetch('http://localhost:5000/api/events', { // Fixed URL
+      const res = await fetch('http://localhost:5000/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       
-      console.log('Response status:', res.status); // Debug log
-      console.log('Response ok:', res.ok); // Debug log
-      
       if (!res.ok) {
         const errorText = await res.text();
-        console.error('Error response:', errorText); // Debug log
         throw new Error(errorText || `HTTP error! status: ${res.status}`);
       }
       
       const saved = await res.json();
-      console.log('Event saved successfully:', saved); // Debug log
-      
       setPublishedEvent(saved);
       const url = saved.shareableLink || `${window.location.origin}/events/${saved._id}`;
       setShareableLink(url);
     } catch (err) {
-      console.error('Publish error:', err); // Enhanced error logging
       setPublishError(`Failed to create event: ${err.message}`);
     } finally {
       setPublishing(false);
@@ -328,7 +343,6 @@ const PreviewEvent = ({
     setSendingInvites(true);
     try {
       const res = await fetch(`/api/events/${publishedEvent._id}/invite`, {
-
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: publishedEvent._id, phones })
@@ -429,86 +443,6 @@ const PreviewEvent = ({
     );
   }
 
-  if (showConfirmation) {
-    return (
-      <Container maxWidth="md" style={{ marginTop: '2rem' }}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Selection Confirmation
-        </Typography>
-
-        <Paper elevation={3} style={{ padding: '2rem', marginBottom: '2rem' }}>
-          <Typography variant="h5" gutterBottom>
-            {eventData.name || 'Your Event'}
-          </Typography>
-
-          {/* Selected Activities */}
-          {selectedActivities.length > 0 && (
-            <>
-              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-                Selected Activities
-              </Typography>
-              {selectedActivities.map(activityId => {
-                const activity = activities.find(a => a.id === activityId);
-                return activity ? (
-                  <Card key={activityId} sx={{ mb: 2 }}>
-                    <CardContent>
-                      <Typography variant="subtitle1">{activity.name}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {activity.timeCommitment && `Time: ${activity.timeCommitment}`}
-                      </Typography>
-                      <Typography variant="body2" color="primary">
-                        {getCostDisplay(activity)}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                ) : null;
-              })}
-            </>
-          )}
-
-          {/* Selected Support Options */}
-          {selectedSupports.length > 0 && (
-            <>
-              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-                Selected Support Options
-              </Typography>
-              {selectedSupports.map(supportId => {
-                const support = activitySupports.find(s => s.id === supportId);
-                return support ? (
-                  <Card key={supportId} sx={{ mb: 2 }}>
-                    <CardContent>
-                      <Typography variant="subtitle1">{support.option}</Typography>
-                      <Typography variant="body2" color="primary">
-                        {getCostDisplay(support)}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                ) : null;
-              })}
-            </>
-          )}
-
-          {/* Total Cost */}
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
-            <Typography variant="h6" align="center">
-              Estimated Total Cost: ${calculateTotalCost().toFixed(2)}
-            </Typography>
-          </Box>
-        </Paper>
-
-        {/* Action Buttons */}
-        <Box display="flex" justifyContent="space-between">
-          <Button variant="outlined" onClick={() => setShowConfirmation(false)}>
-            Back to Preview
-          </Button>
-          <Button variant="contained" color="success" onClick={handlePublish} disabled={publishing}>
-            {publishing ? <CircularProgress size={24} /> : 'Confirm & Publish Event'}
-          </Button>
-        </Box>
-      </Container>
-    );
-  }
-
   return (
     <Container maxWidth="md" style={{ marginTop: '2rem' }}>
       <Typography variant="h4" align="center" gutterBottom>
@@ -600,11 +534,68 @@ const PreviewEvent = ({
 
         <Divider style={{ margin: '1.5rem 0' }} />
 
-        {/* Activities Section */}
-        {activities.length > 0 && (
+        {/* Fixed Activities Section */}
+        {fixedActivities.length > 0 && (
           <>
             <Typography variant="h6" gutterBottom>
-              Activities
+              Fixed Activities
+              <Chip label="Required" size="small" color="default" sx={{ ml: 2 }} />
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              These activities are automatically included in your event.
+            </Typography>
+
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              {fixedActivities.map((activity) => (
+                <Grid item xs={12} md={6} key={activity.id}>
+                  <Card sx={{ border: '2px solid #e0e0e0', backgroundColor: '#f5f5f5' }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {activity.name}
+                        <Chip label="Fixed" size="small" sx={{ ml: 1 }} />
+                      </Typography>
+                      
+                      {activity.timeCommitment && (
+                        <Box display="flex" alignItems="center" mb={1}>
+                          <AccessTimeIcon fontSize="small" style={{ marginRight: '4px' }} />
+                          <Typography variant="body2">{activity.timeCommitment}</Typography>
+                        </Box>
+                      )}
+
+                      <Box display="flex" alignItems="center" mb={1}>
+                        <AttachMoneyIcon fontSize="small" style={{ marginRight: '4px' }} />
+                        <Typography variant="body2" color="primary">
+                          {getCostDisplay(activity)}
+                        </Typography>
+                      </Box>
+
+                      {activity.equipmentEnabled && activity.equipmentItems && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                          Equipment needed: {activity.equipmentItems}
+                        </Typography>
+                      )}
+
+                      {activity.link && (
+                        <CardActions>
+                          <Button size="small" href={activity.link} target="_blank">
+                            Learn More
+                          </Button>
+                        </CardActions>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </>
+        )}
+
+        {/* Votable Activities Section */}
+        {votableActivities.length > 0 && (
+          <>
+            <Typography variant="h6" gutterBottom>
+              Votable Activities
               {requiredActivityCount && (
                 <Chip 
                   label={`Select ${requiredActivityCount}`} 
@@ -621,21 +612,21 @@ const PreviewEvent = ({
               </Alert>
             )}
 
-            <Grid container spacing={2}>
-              {activities.map((activity) => (
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              {votableActivities.map((activity) => (
                 <Grid item xs={12} md={6} key={activity.id}>
                   <Card 
                     sx={{ 
-                      cursor: activity.isVotable ? 'pointer' : 'default',
+                      cursor: 'pointer',
                       border: selectedActivities.includes(activity.id) ? '2px solid #1976d2' : '1px solid #e0e0e0',
-                      '&:hover': activity.isVotable ? { boxShadow: 2 } : {}
+                      '&:hover': { boxShadow: 2 }
                     }}
-                    onClick={() => activity.isVotable && handleActivitySelection(activity.id)}
+                    onClick={() => handleActivitySelection(activity.id)}
                   >
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
                         {activity.name}
-                        {!activity.isVotable && <Chip label="Fixed" size="small" sx={{ ml: 1 }} />}
+                        <Chip label="Voting" size="small" color="primary" sx={{ ml: 1 }} />
                       </Typography>
                       
                       {activity.timeCommitment && (
@@ -675,11 +666,47 @@ const PreviewEvent = ({
 
         <Divider style={{ margin: '1.5rem 0' }} />
 
-        {/* Activity Support Section */}
-        {activitySupports.length > 0 && (
+        {/* Fixed Support Options Section */}
+        {fixedSupports.length > 0 && (
           <>
             <Typography variant="h6" gutterBottom>
-              Activity Support Options
+              Fixed Support Options
+              <Chip label="Required" size="small" color="default" sx={{ ml: 2 }} />
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              These support options are automatically included in your event.
+            </Typography>
+
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              {fixedSupports.map((support) => (
+                <Grid item xs={12} md={6} key={support.id}>
+                  <Card sx={{ border: '2px solid #e0e0e0', backgroundColor: '#f5f5f5' }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {support.customLabel || support.option}
+                        <Chip label="Fixed" size="small" sx={{ ml: 1 }} />
+                      </Typography>
+                      
+                      <Box display="flex" alignItems="center" mb={1}>
+                        <AttachMoneyIcon fontSize="small" style={{ marginRight: '4px' }} />
+                        <Typography variant="body2" color="primary">
+                          {getCostDisplay(support)}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </>
+        )}
+
+        {/* Votable Support Options Section */}
+        {votableSupports.length > 0 && (
+          <>
+            <Typography variant="h6" gutterBottom>
+              Votable Support Options
               {requiredSupportCount && (
                 <Chip 
                   label={`Select ${requiredSupportCount}`} 
@@ -696,21 +723,21 @@ const PreviewEvent = ({
               </Alert>
             )}
 
-            <Grid container spacing={2}>
-              {activitySupports.map((support) => (
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              {votableSupports.map((support) => (
                 <Grid item xs={12} md={6} key={support.id}>
                   <Card 
                     sx={{ 
-                      cursor: support.isVotable ? 'pointer' : 'default',
+                      cursor: 'pointer',
                       border: selectedSupports.includes(support.id) ? '2px solid #1976d2' : '1px solid #e0e0e0',
-                      '&:hover': support.isVotable ? { boxShadow: 2 } : {}
+                      '&:hover': { boxShadow: 2 }
                     }}
-                    onClick={() => support.isVotable && handleSupportSelection(support.id)}
+                    onClick={() => handleSupportSelection(support.id)}
                   >
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
-                        {support.option}
-                        {!support.isVotable && <Chip label="Fixed" size="small" sx={{ ml: 1 }} />}
+                        {support.customLabel || support.option}
+                        <Chip label="Voting" size="small" color="primary" sx={{ ml: 1 }} />
                       </Typography>
                       
                       <Box display="flex" alignItems="center" mb={1}>
@@ -729,41 +756,130 @@ const PreviewEvent = ({
 
         <Divider style={{ margin: '1.5rem 0' }} />
 
-        {/* Event Visibility */}
-        {/* <Box display="flex" alignItems="center" mb={2}>
-          {eventData.isPublic ? <PublicIcon color="primary" /> : <LockIcon color="error" />}
-          <Typography variant="subtitle1" style={{ marginLeft: '0.5rem' }}>
-            {eventData.isPublic ? 'Public Event' : 'Private Event'}
-          </Typography>
-        </Box> */}
-
         {/* Selection Summary */}
-        {(selectedActivities.length > 0 || selectedSupports.length > 0) && (
-          <>
-            <Divider style={{ margin: '1.5rem 0' }} />
-            <Box sx={{ bgcolor: 'grey.100', p: 2, borderRadius: 1 }}>
-              <Typography variant="h6" gutterBottom>
-                Your Current Selections
+        <Box sx={{ bgcolor: 'grey.100', p: 2, borderRadius: 1 }}>
+          <Typography variant="h6" gutterBottom>
+            Cost Summary
+          </Typography>
+          
+          {/* Fixed costs always included */}
+          {(fixedActivities.length > 0 || fixedSupports.length > 0) && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Fixed Costs (Included):
               </Typography>
-              
-              {selectedActivities.length > 0 && (
-                <Typography variant="body2">
-                  Activities: {selectedActivities.length} selected
+              {fixedActivities.map(activity => (
+                <Typography variant="body2" key={activity.id} sx={{ ml: 2 }}>
+                  • {activity.name}: {getCostDisplay(activity)}
                 </Typography>
-              )}
-              
-              {selectedSupports.length > 0 && (
-                <Typography variant="body2">
-                  Support Options: {selectedSupports.length} selected
+              ))}
+              {fixedSupports.map(support => (
+                <Typography variant="body2" key={support.id} sx={{ ml: 2 }}>
+                  • {support.customLabel || support.option}: {getCostDisplay(support)}
                 </Typography>
-              )}
-              
-              <Typography variant="subtitle1" color="primary" sx={{ mt: 1 }}>
-                Estimated Total: ${calculateTotalCost().toFixed(2)}
-              </Typography>
+              ))}
             </Box>
-          </>
-        )}
+          )}
+          
+          {/* Selected votable costs */}
+          {(selectedActivities.length > 0 || selectedSupports.length > 0) && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Selected Options:
+              </Typography>
+              {selectedActivities.map(activityId => {
+                const activity = votableActivities.find(a => a.id === activityId);
+                return activity ? (
+                  <Typography variant="body2" key={activityId} sx={{ ml: 2 }}>
+                    • {activity.name}: {getCostDisplay(activity)}
+                  </Typography>
+                ) : null;
+              })}
+              {selectedSupports.map(supportId => {
+                const support = votableSupports.find(s => s.id === supportId);
+                return support ? (
+                  <Typography variant="body2" key={supportId} sx={{ ml: 2 }}>
+                    • {support.customLabel || support.option}: {getCostDisplay(support)}
+                  </Typography>
+                ) : null;
+              })}
+            </Box>
+          )}
+          
+          <Typography variant="subtitle1" color="primary" sx={{ mt: 2, fontWeight: 600 }}>
+            Estimated Total: {(() => {
+              let minTotal = 0;
+              let maxTotal = 0;
+              let hasRanges = false;
+
+              // Add all fixed activities
+              fixedActivities.forEach(activity => {
+                if (activity.costMode === 'fixed' && activity.cost) {
+                  minTotal += parseFloat(activity.cost);
+                  maxTotal += parseFloat(activity.cost);
+                } else if (activity.costMode === 'range' && activity.minCost && activity.maxCost) {
+                  minTotal += parseFloat(activity.minCost);
+                  maxTotal += parseFloat(activity.maxCost);
+                  hasRanges = true;
+                }
+              });
+
+              // Add all fixed supports
+              fixedSupports.forEach(support => {
+                if (support.costMode === 'fixed' && support.cost) {
+                  minTotal += parseFloat(support.cost);
+                  maxTotal += parseFloat(support.cost);
+                } else if (support.costMode === 'range' && support.minCost && support.maxCost) {
+                  minTotal += parseFloat(support.minCost);
+                  maxTotal += parseFloat(support.maxCost);
+                  hasRanges = true;
+                }
+              });
+
+              // Add selected votable activities
+              selectedActivities.forEach(activityId => {
+                const activity = votableActivities.find(a => a.id === activityId);
+                if (activity) {
+                  if (activity.costMode === 'fixed' && activity.cost) {
+                    minTotal += parseFloat(activity.cost);
+                    maxTotal += parseFloat(activity.cost);
+                  } else if (activity.costMode === 'range' && activity.minCost && activity.maxCost) {
+                    minTotal += parseFloat(activity.minCost);
+                    maxTotal += parseFloat(activity.maxCost);
+                    hasRanges = true;
+                  }
+                }
+              });
+
+              // Add selected votable supports
+              selectedSupports.forEach(supportId => {
+                const support = votableSupports.find(s => s.id === supportId);
+                if (support) {
+                  if (support.costMode === 'fixed' && support.cost) {
+                    minTotal += parseFloat(support.cost);
+                    maxTotal += parseFloat(support.cost);
+                  } else if (support.costMode === 'range' && support.minCost && support.maxCost) {
+                    minTotal += parseFloat(support.minCost);
+                    maxTotal += parseFloat(support.maxCost);
+                    hasRanges = true;
+                  }
+                }
+              });
+
+              // If there are any ranges OR if we have any costs at all, show as range
+              if (minTotal === maxTotal && minTotal > 0) {
+                // All fixed costs, but show as range for consistency
+                return `$${minTotal.toFixed(2)} - $${(maxTotal * 1.1).toFixed(2)}*`;
+              } else if (minTotal !== maxTotal) {
+                // Mixed or range costs
+                return `$${minTotal.toFixed(2)} - $${maxTotal.toFixed(2)}`;
+              } else {
+                return '$0.00';
+              }
+            })()}
+          </Typography>
+          
+        </Box>
       </Paper>
 
       {/* Action Buttons */}
@@ -771,23 +887,12 @@ const PreviewEvent = ({
         <Button variant="outlined" color="primary" onClick={onEdit}>
           Edit Event (Admin View)
         </Button>
-        <Box>
-          {(selectedActivities.length > 0 || selectedSupports.length > 0) && (
-            <Button 
-              variant="outlined" 
-              onClick={() => setShowConfirmation(true)}
-              sx={{ mr: 2 }}
-            >
-              View Selection Summary
-            </Button>
-          )}
-          <Button variant="contained" color="success" onClick={handlePublish} disabled={publishing}>
-            {publishing ? <CircularProgress size={24} /> : 'Publish Event'}
-          </Button>
-        </Box>
+        <Button variant="contained" color="success" onClick={onConfirm || handlePublish} disabled={publishing}>
+          {publishing ? <CircularProgress size={24} /> : 'Publish Event'}
+        </Button>
       </Box>
     </Container>
   );
 };
 
-export default PreviewEvent; 
+export default PreviewEvent;

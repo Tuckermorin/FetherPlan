@@ -1,5 +1,5 @@
-// frontend/src/pages/CreateYourEvent.jsx (Enhanced Version)
-import React, { useState, useMemo } from 'react';
+// frontend/src/pages/CreateYourEvent.jsx (Enhanced Version with improvements)
+import React, { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Container,
@@ -30,7 +30,8 @@ const FORM_STEPS = [
   'Event Details',
   'Activities',
   'Support Options',
-  'Review & Publish'
+  'Review',
+  'Publish'
 ];
 
 export default function CreateYourEvent({ onBack, editEvent = null }) {
@@ -107,6 +108,13 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
     [isDirty, activities.length, activitySupports.length]
   );
 
+  // Auto-add an activity when entering step 2
+  useEffect(() => {
+    if (currentStep === 2 && activities.length === 0) {
+      addActivity();
+    }
+  }, [currentStep]);
+
   // Activity management functions
   const addActivity = () => {
     setActivities(prev => [
@@ -168,6 +176,25 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
     setActivitySupports(prev => prev.filter(support => support.id !== id));
   };
 
+  // Complete and Clone function for activity supports
+  const completeAndCloneActivitySupport = (id) => {
+    const support = activitySupports.find(s => s.id === id);
+    if (support) {
+      // Complete the current support
+      updateActivitySupport(id, 'isCompleted', true);
+      
+      // Create a clone with a new ID
+      const clonedSupport = {
+        ...support,
+        id: Date.now(),
+        isCompleted: false,
+        customLabel: support.customLabel ? `${support.customLabel} (Copy)` : `${support.option} (Copy)`
+      };
+      
+      setActivitySupports(prev => [...prev, clonedSupport]);
+    }
+  };
+
   // Step validation
   const isStepValid = (step) => {
     switch (step) {
@@ -184,8 +211,23 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
     }
   };
 
+  const getNextStepName = () => {
+    switch (currentStep) {
+      case 1:
+        return 'Add Activities';
+      case 2:
+        return 'Support Options';
+      case 3:
+        return 'Review Event';
+      case 4:
+        return 'Publish Event';
+      default:
+        return 'Next';
+    }
+  };
+
   const handleNext = () => {
-    if (currentStep < 4 && isStepValid(currentStep)) {
+    if (currentStep < 5 && isStepValid(currentStep)) {
       setCurrentStep(prev => prev + 1);
     }
   };
@@ -419,7 +461,7 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
 
             <StepProgress 
               currentStep={currentStep} 
-              totalSteps={4} 
+              totalSteps={5} 
               stepNames={FORM_STEPS}
             />
 
@@ -580,6 +622,7 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
                         addActivitySupport={addActivitySupport}
                         updateActivitySupport={updateActivitySupport}
                         removeActivitySupport={removeActivitySupport}
+                        completeAndCloneActivitySupport={completeAndCloneActivitySupport}
                       />
                     </motion.div>
                   )}
@@ -592,12 +635,189 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3 }}
                     >
+                      {/* Review Step - Show Preview-like View */}
                       <Typography variant="h5" gutterBottom>
-                        Review & Publish
+                        Review Your Event
                       </Typography>
                       
                       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                        Review your event details below. Once published, participants will be able to view and respond to your event.
+                        These are the general details of your event. If you would like to view it as the participant would see it, click the "Full Preview" button below.
+                      </Typography>
+
+                      {/* Event Preview Content */}
+                      <Box sx={{ border: '2px dashed', borderColor: 'primary.main', borderRadius: 2, p: 3, mb: 3, bgcolor: 'background.paper' }}>
+                        <Typography variant="overline" color="primary" sx={{ fontWeight: 600, mb: 2, display: 'block' }}>
+                          Event Preview
+                        </Typography>
+                        
+                        {/* Event Header */}
+                        <Typography variant="h3" gutterBottom sx={{ fontWeight: 700 }}>
+                          {watchedValues.name || 'Unnamed Event'}
+                        </Typography>
+
+                        <Typography variant="body1" paragraph>
+                          {watchedValues.description || 'No description provided.'}
+                        </Typography>
+
+                        {/* Date & Time Display */}
+                        <Box sx={{ mb: 3 }}>
+                          <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            📅 Event Schedule
+                          </Typography>
+                          {watchedValues.dateMode === 'single' ? (
+                            <Typography variant="body1">
+                              <strong>Date:</strong> {watchedValues.date || 'Not set'} 
+                              {watchedValues.time ? ` at ${watchedValues.time}` : ''}
+                            </Typography>
+                          ) : (
+                            <Typography variant="body1">
+                              <strong>Duration:</strong> {watchedValues.startDate || 'Not set'} to {watchedValues.endDate || 'Not set'}
+                              {watchedValues.allowParticipantSelection && (
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                  Participants will select {watchedValues.requiredDayCount || 1} day(s) within this range
+                                </Typography>
+                              )}
+                            </Typography>
+                          )}
+                        </Box>
+
+                        {/* Activities Preview */}
+                        {activities.length > 0 && (
+                          <Box sx={{ mb: 3 }}>
+                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              🎯 Activities ({activities.length})
+                            </Typography>
+                            <Grid container spacing={2}>
+                              {activities.slice(0, 3).map((activity, index) => (
+                                <Grid item xs={12} sm={6} md={4} key={activity.id}>
+                                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                      {activity.name || `Activity ${index + 1}`}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 0.5, mt: 1 }}>
+                                      <Chip 
+                                        label={activity.isVotable ? 'Votable' : 'Fixed'} 
+                                        size="small" 
+                                        color={activity.isVotable ? 'primary' : 'default'}
+                                      />
+                                      {((activity.costMode === 'fixed' && activity.cost) || 
+                                        (activity.costMode === 'range' && activity.minCost && activity.maxCost)) && (
+                                        <Chip 
+                                          label={activity.costMode === 'fixed' ? `$${activity.cost}` : `$${activity.minCost} - $${activity.maxCost}`} 
+                                          size="small" 
+                                          variant="outlined" 
+                                        />
+                                      )}
+                                    </Box>
+                                  </Box>
+                                </Grid>
+                              ))}
+                              {activities.length > 3 && (
+                                <Grid item xs={12}>
+                                  <Typography variant="body2" color="text.secondary">
+                                    ... and {activities.length - 3} more activities
+                                  </Typography>
+                                </Grid>
+                              )}
+                            </Grid>
+                          </Box>
+                        )}
+
+                        {/* Support Options Preview */}
+                        {activitySupports.length > 0 && (
+                          <Box sx={{ mb: 3 }}>
+                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              🛠️ Support Options ({activitySupports.length})
+                            </Typography>
+                            <Grid container spacing={2}>
+                              {activitySupports.slice(0, 3).map((support, index) => (
+                                <Grid item xs={12} sm={6} md={4} key={support.id}>
+                                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                      {support.customLabel || support.option}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      {support.category}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 0.5, mt: 1 }}>
+                                      <Chip 
+                                        label={support.isVotable ? 'Votable' : 'Fixed'} 
+                                        size="small" 
+                                        color={support.isVotable ? 'primary' : 'default'}
+                                      />
+                                      {((support.costMode === 'fixed' && support.cost) || 
+                                        (support.costMode === 'range' && support.minCost && support.maxCost)) && (
+                                        <Chip 
+                                          label={support.costMode === 'fixed' ? `$${support.cost}` : `$${support.minCost} - $${support.maxCost}`} 
+                                          size="small" 
+                                          variant="outlined" 
+                                        />
+                                      )}
+                                    </Box>
+                                  </Box>
+                                </Grid>
+                              ))}
+                              {activitySupports.length > 3 && (
+                                <Grid item xs={12}>
+                                  <Typography variant="body2" color="text.secondary">
+                                    ... and {activitySupports.length - 3} more support options
+                                  </Typography>
+                                </Grid>
+                              )}
+                            </Grid>
+                          </Box>
+                        )}
+
+                      </Box>
+
+                      {/* Admin Notes */}
+                      <Box sx={{ p: 3, bgcolor: 'warning.light', borderRadius: 2, mb: 3 }}>
+                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          ⚠️ Before Publishing
+                        </Typography>
+                        <Typography variant="body2" component="div">
+                          <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
+                            <li>Double-check all event details, dates, and costs</li>
+                            <li>Ensure activity and support options are complete</li>
+                            <li>Verify participant instructions are clear</li>
+                            <li>Once published, participants will receive notifications</li>
+                          </ul>
+                        </Typography>
+                      </Box>
+
+                      {/* Ready to Review */}
+                      <Box sx={{ 
+                        p: 3, 
+                        bgcolor: 'success.light', 
+                        color: 'success.contrastText',
+                        borderRadius: 2, 
+                        textAlign: 'center',
+                        mb: 2
+                      }}>
+                        <Typography variant="h6" gutterBottom>
+                          Ready for the Final Step! ✅
+                        </Typography>
+                        <Typography variant="body2">
+                          If everything looks good above, proceed to publish your event and make it live for participants.
+                        </Typography>
+                      </Box>
+                    </motion.div>
+                  )}
+
+                  {currentStep === 5 && (
+                    <motion.div
+                      key="step5"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Typography variant="h5" gutterBottom>
+                        Publish Your Event
+                      </Typography>
+                      
+                      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                        Final step! Publish your event to make it available to participants.
                       </Typography>
 
                       {/* Event Summary Card */}
@@ -685,74 +905,6 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
                         </Grid>
                       </Box>
 
-                      {/* Activity Details */}
-                      {activities.length > 0 && (
-                        <Box sx={{ mb: 3 }}>
-                          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                            Activities ({activities.length})
-                          </Typography>
-                          <Grid container spacing={2}>
-                            {activities.map((activity, index) => (
-                              <Grid item xs={12} sm={6} key={activity.id}>
-                                <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
-                                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                    {activity.name || `Activity ${index + 1}`}
-                                  </Typography>
-                                  {activity.timeCommitment && (
-                                    <Typography variant="body2" color="text.secondary">
-                                      Time: {activity.timeCommitment}
-                                    </Typography>
-                                  )}
-                                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                                    <Chip 
-                                      label={activity.isVotable ? 'Votable' : 'Fixed'} 
-                                      size="small" 
-                                      color={activity.isVotable ? 'primary' : 'default'}
-                                    />
-                                    {activity.cost && (
-                                      <Chip label={`${activity.cost}`} size="small" variant="outlined" />
-                                    )}
-                                  </Box>
-                                </Box>
-                              </Grid>
-                            ))}
-                          </Grid>
-                        </Box>
-                      )}
-
-                      {/* Support Options Details */}
-                      {activitySupports.length > 0 && (
-                        <Box sx={{ mb: 3 }}>
-                          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                            Support Options ({activitySupports.length})
-                          </Typography>
-                          <Grid container spacing={2}>
-                            {activitySupports.map((support, index) => (
-                              <Grid item xs={12} sm={6} key={support.id}>
-                                <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
-                                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                    {support.customLabel || support.option}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Category: {support.category}
-                                  </Typography>
-                                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                                    <Chip 
-                                      label={support.isVotable ? 'Votable' : 'Fixed'} 
-                                      size="small" 
-                                      color={support.isVotable ? 'primary' : 'default'}
-                                    />
-                                    {support.cost && (
-                                      <Chip label={`${support.cost}`} size="small" variant="outlined" />
-                                    )}
-                                  </Box>
-                                </Box>
-                              </Grid>
-                            ))}
-                          </Grid>
-                        </Box>
-                      )}
-
                       {/* Ready to Publish */}
                       <Box sx={{ 
                         p: 3, 
@@ -767,7 +919,7 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
                         </Typography>
                         <Typography variant="body2">
                           Your event is complete and ready to share with participants. 
-                          Click "Publish Event" to make it live.
+                          Click "Publish Event" to make it live and send invitations.
                         </Typography>
                       </Box>
                     </motion.div>
@@ -793,21 +945,23 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
                   </Button>
 
                   <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button
-                      variant="outlined"
-                      onClick={handlePreview}
-                      disabled={!isStepValid(1)}
-                    >
-                      Preview Event
-                    </Button>
+                    {currentStep === 4 && (
+                      <Button
+                        variant="outlined"
+                        onClick={handlePreview}
+                        disabled={!isStepValid(1)}
+                      >
+                        Full Preview
+                      </Button>
+                    )}
 
-                    {currentStep < 4 ? (
+                    {currentStep < 5 ? (
                       <Button
                         variant="contained"
                         onClick={handleNext}
                         disabled={!isStepValid(currentStep)}
                       >
-                        Next
+                        {getNextStepName()}
                       </Button>
                     ) : (
                       <Button
@@ -816,7 +970,7 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
                         disabled={isSubmitting || !isStepValid(1)}
                         startIcon={isSubmitting ? <CircularProgress size={20} /> : <Save />}
                       >
-                        {isSubmitting ? 'Creating...' : editEvent ? 'Update Event' : 'Create Event'}
+                        {isSubmitting ? 'Publishing...' : editEvent ? 'Update Event' : 'Publish Event'}
                       </Button>
                     )}
                   </Box>

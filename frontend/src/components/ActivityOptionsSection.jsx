@@ -75,7 +75,12 @@ export default function ActivityOptionsSection({ activities, addActivity, update
                             />
                           </Box>
                           <Typography className="completed-activity-detail" sx={{ mt: 0.5 }}>
-                            Cost: ${activity.cost}
+                            Cost: {activity.costMode === 'fixed' && activity.cost 
+                              ? `$${activity.cost}` 
+                              : activity.costMode === 'range' && activity.minCost && activity.maxCost
+                              ? `$${activity.minCost} - $${activity.maxCost}`
+                              : 'Cost TBD'
+                            }
                           </Typography>
                         </Card>
                       ) : (
@@ -186,7 +191,7 @@ export default function ActivityOptionsSection({ activities, addActivity, update
                               <ToggleButtonGroup
                                 value={activity.costMode}
                                 exclusive
-                                onChange={(_, mode) => updateActivity(activity.id, 'costMode', mode)}
+                                onChange={(_, mode) => mode && updateActivity(activity.id, 'costMode', mode)}
                                 size="small"
                                 className="cost-mode-toggle"
                               >
@@ -294,7 +299,12 @@ export default function ActivityOptionsSection({ activities, addActivity, update
                             />
                           </Box>
                           <Typography className="completed-activity-detail" sx={{ mt: 0.5 }}>
-                            Cost: ${activity.cost}
+                            Cost: {activity.costMode === 'fixed' && activity.cost 
+                              ? `$${activity.cost}` 
+                              : activity.costMode === 'range' && activity.minCost && activity.maxCost
+                              ? `$${activity.minCost} - $${activity.maxCost}`
+                              : 'Cost TBD'
+                            }
                           </Typography>
                         </Card>
                       ) : (
@@ -405,7 +415,7 @@ export default function ActivityOptionsSection({ activities, addActivity, update
                               <ToggleButtonGroup
                                 value={activity.costMode}
                                 exclusive
-                                onChange={(_, mode) => updateActivity(activity.id, 'costMode', mode)}
+                                onChange={(_, mode) => mode && updateActivity(activity.id, 'costMode', mode)}
                                 size="small"
                                 className="cost-mode-toggle"
                               >
