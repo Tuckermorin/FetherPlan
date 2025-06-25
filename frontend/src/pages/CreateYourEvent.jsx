@@ -23,6 +23,7 @@ import UnsavedChangesGuard from '../components/UnsavedChangesGuard';
 import PreviewEvent from './PreviewEvent';
 import ActivityOptionsSection from '../components/ActivityOptionsSection';
 import ActivitySupportSection from '../components/ActivitySupportSection';
+import EventProgressTracker from '../components/EventProgressTracker';
 
 import './CreateYourEvent.css';
 
@@ -448,6 +449,7 @@ export default function CreateYourEvent({ onBack, editEvent = null }) {
 
   return (
     <ErrorBoundary>
+      <EventProgressTracker activities={activities} />
       <UnsavedChangesGuard isDirty={formIsDirty}>
         {({ attemptNavigate }) => (
           <Container maxWidth="md" className="single-event-container">

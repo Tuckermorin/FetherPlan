@@ -16,11 +16,13 @@ import {
   Edit,
   Delete,
   CalendarToday,
+  ContentCopy,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { useDeleteEvent } from '../hooks/useApi';
+import { useDeleteEvent, useCreateEvent } from '../hooks/useApi';
 import { useNotification } from '../components/ErrorHandling';
 import { calculateEventCost } from '../utils/costUtils';
+import MiniEventProgress from './MiniEventProgress';
 
 const EventCard = ({ event, onView, onEdit }) => {
   const { showNotification } = useNotification();
@@ -29,11 +31,21 @@ const EventCard = ({ event, onView, onEdit }) => {
       showNotification('Event deleted successfully', 'success');
     },
   });
+  const cloneEventMutation = useCreateEvent({
+    onSuccess: () => {
+      showNotification('Event cloned successfully', 'success');
+    },
+  });
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this event?')) {
       deleteEventMutation.mutate(event._id);
     }
+  };
+
+  const handleClone = () => {
+    const { _id, eventCode, adminCode, createdAt, updatedAt, __v, ...data } = event;
+    cloneEventMutation.mutate({ ...data, eventData: { ...event.eventData, name: `${event.eventData?.name || 'Event'} (Copy)` } });
   };
 
   const getEventStatus = () => {
@@ -183,6 +195,9 @@ const EventCard = ({ event, onView, onEdit }) => {
           <IconButton size="small" onClick={() => onEdit(event)} color="primary">
             <Edit fontSize="small" />
           </IconButton>
+          <IconButton size="small" onClick={handleClone} color="primary" disabled={cloneEventMutation.isLoading}>
+            <ContentCopy fontSize="small" />
+          </IconButton>
           <IconButton
             size="small"
             onClick={handleDelete}
@@ -193,6 +208,9 @@ const EventCard = ({ event, onView, onEdit }) => {
           </IconButton>
         </Box>
       </CardActions>
+      <Box sx={{ px: 2, pb: 2 }}>
+        <MiniEventProgress event={event} />
+      </Box>
     </Card>
   );
 };
