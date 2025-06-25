@@ -13,7 +13,12 @@ app.use(express.json());
 
 // 2) CORS
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    'https://fether-plan.vercel.app',
+    'https://fetherplan.com',
+    'https://www.fetherplan.com'
+  ],
   credentials: true
 }));
 
