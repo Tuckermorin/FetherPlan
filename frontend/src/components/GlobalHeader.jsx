@@ -2,9 +2,17 @@
 import React from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
 import { Event } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
+import { useAuth } from '../context/AuthContext';
 
 export default function GlobalHeader({ onHome, onViewEvents, currentPage }) {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
   return (
     <Box
       sx={{
@@ -73,7 +81,7 @@ export default function GlobalHeader({ onHome, onViewEvents, currentPage }) {
             >
               Features
             </Button>
-            {onViewEvents && (
+            {user && onViewEvents && (
               <Button
                 variant={currentPage === 'events' ? 'contained' : 'outlined'}
                 startIcon={<Event />}
@@ -95,33 +103,57 @@ export default function GlobalHeader({ onHome, onViewEvents, currentPage }) {
               </Button>
             )}
             <ThemeToggle />
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{
-                ml: 1,
-                borderColor: 'divider',
-                color: 'text.primary',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  backgroundColor: 'action.hover',
-                },
-              }}
-            >
-              Log In
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              sx={{
-                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                },
-              }}
-            >
-              Sign Up
-            </Button>
+            {!user && (
+              <>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => navigate('/login')}
+                  sx={{
+                    ml: 1,
+                    borderColor: 'divider',
+                    color: 'text.primary',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
+                >
+                  Log In
+                </Button>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => navigate('/login')}
+                  sx={{
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                    },
+                  }}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
+            {user && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleSignOut}
+                sx={{
+                  ml: 1,
+                  borderColor: 'divider',
+                  color: 'text.primary',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              >
+                Sign Out
+              </Button>
+            )}
           </Box>
         </Box>
       </Container>
